@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<script>
+	var topP;
+	var leftP;
+// 	let mouseX = 0;
+// 	let mouseY = 0;
+// 	let ballX = 0;
+// 	let ballY = 0;
+// 	let speed = 0.02;
+// 	var angle;
+	var result
+	var Height = window.innerHeight;
+	var Width = window.innerWidth;
+	var inter;
+	var saved_moves = "";
+	var count = 6;
+	let offset = 0;
+	var position = 0;
+	var trans = "";
+	var newTop = null;
+	var newLeft = null;
+	let keys = {};
+	var turbo = true;
+	var speed = 5.0;
+	var first = false;
+		 
+		  window.onkeyup = function( e ) {
+		       var kc = e.keyCode;
+		       
+
+		       if ( kc === 37 ) Keys.left = false;
+		       else if ( kc === 38 ) Keys.up = false;
+		       else if ( kc === 39 ) Keys.right = false;
+		       else if ( kc === 40 ) Keys.down = false;
+		       else if(kc === 13) Keys.enter = false;
+		     };
+		     
+	window.onload = function() {
+		
+		plane1 = document.createElement("img")
+		plane1.src = "https://i.pinimg.com/originals/3b/03/94/3b0394153492f7a2e31e80bb9e4c4fb5.gif";
+		plane1.style.width = 100 + "px";
+		plane1.style.height = 100 + "px"
+		plane1.style.position = "relative";
+		plane1.setAttribute("id", "plane1")
+		plane1.style.top = 400 + "px";
+		plane1.style.overflow= "hidden";
+		// 			parseInt(document.documentElement.scrollHeight / 2)+ "px";
+		plane1.style.left = 400 + "px"
+		plane1.style.transformOrigin = "center";
+		// 			parseInt(screen.width / 2) + "px";
+		document.getElementById("container").append(plane1)
+		topP = plane1.style.top.slice("p")[0]
+		leftP = plane1.style.left.slice("p")[0];
+		
+	
+		var base = document.getElementById('plane1')
+		var rect = base.getBoundingClientRect();
+// 		animate()
+		document.addEventListener("keyup", function( e ) {
+			      if(e.keyCode === 32){
+				Fire()
+			      }
+			      if(e.keyCode === 13){
+			    	  var boost = document.getElementById("boost")
+			    	  if(turbo){
+			    	  speed = 10.0
+			    	  const audio = new Audio("https://sndup.net/xf25/d");
+			  			audio.volume = 0.9;
+			  			audio.play();
+			    	  turbo = false;
+			    	  boost.innerHTML ="Boost: "+count;
+			    	  var countdown = setInterval(function() {
+			    		  count--
+			    		  boost.innerHTML ="Boost: "+count;
+			    		
+			    	  },1000)
+			    	  
+			    	  setTimeout(function() {
+			    		  clearInterval(countdown)
+			    		  count = 6;
+			    		  boost.innerHTML ="Boost: Getting Ready"
+			    		  speed = 5.0;
+			    		  audio.pause()
+			    		  setTimeout(function() {
+			    			  turbo = true;	 
+			    			  boost.innerHTML ="Boost: Ready"
+			    			  
+			    		  }, 10000)
+			    	  }, 6000)
+			      }
+			    	  else{
+			    		  const audio = new Audio("https://sndup.net/nngh/d");
+				  			audio.volume = 0.9;
+				  			audio.play();
+			    		  
+			    		  
+			    	  }
+			      }
+			     })
+		requestAnimationFrame( update );
+		setInterval(updateWalls, 500)
+		
+	}
+		function updateWalls(){
+			var el = document.getElementById("plane1")
+
+			var rect = el.getBoundingClientRect();
+			if(rect.top <= 0){
+				el.style.top = window.innerHeight +"px";
+				
+			}
+			else if(rect.left <= 0){
+				el.style.left = window.innerWidth +"px" 
+			
+			}
+			else if(rect.bottom >= (window.innerHeight || document.documentElement.clientHeight)){
+				el.style.top = 0 +"px"
+				
+			}
+			else if(rect.right >= (window.innerWidth || document.documentElement.clientWidth)){
+			el.style.left = 0 +"px"
+			
+			}
+		
+			}
+
+			
+		
+ 
+
+    function update() {
+    	var plane = document.getElementById("plane1")
+    	saved_moves = document.getElementById("plane1").style.transform;
+      if ( Keys.up ) {
+        
+        plane.style.transform += 'translateY( -'+Math.round(speed )+'px )';
+      }
+      else if ( Keys.down ) {
+       if (speed>1)
+       {   
+    	   plane.style.transform += 'translateY( -'+Math.round(speed )+'px )';
+       }
+    else {
+        speed = 1;
+        plane.style.transform += 'translateY( 1px )';
+    }
+      }
+
+      if ( Keys.left ) {
+    	  plane.style.transform += 'rotate( -3deg )';
+      }
+      else if ( Keys.right ) { 
+    	  plane.style.transform += 'rotate( 3deg )';
+      }
+      
+        requestAnimationFrame( update );
+    }
+    
+
+
+
+	function Fire() {
+		var trany = 0;
+		var saved = saved_moves
+		var i = 5;
+		const audio = new Audio("https://sndup.net/xtw5/d");
+		audio.volume = 0.9;
+		audio.play();
+		var bullet = document.createElement("img")
+		bullet.src = "https://i.ibb.co/8zTJrZC/bullet.png"
+		bullet.style.position = "absolute";
+		bullet.style.width = 20 + "px";
+		bullet.style.height = 20 + "px";
+		bullet.setAttribute("class", "bullet")
+		bullet.style.top = document.getElementById("plane1").style.top
+		bullet.style.left = document.getElementById("plane1").style.left
+		bullet.style.transform = saved_moves;
+		document.getElementById("container").append(bullet)
+		var inter = setInterval(function(){
+			trany -= 7;
+			bullet.style.transform = saved + 'translateY('+trany+'vmin)';
+			var bullets = document.getElementsByClassName("bullet")
+			for(var i = 0; i < bullets.length; i++){
+				const bounding = bullets[i].getBoundingClientRect();
+
+				if (bounding.top < 0 || bounding.left < 0 || bounding.bottom > (window.innerHeight || document.documentElement.clientHeight) || bounding.right > (window.innerWidth || document.documentElement.clientWidth) ) {
+					clearInterval(inter)
+					document.getElementById("container").removeChild(bullets[i])
+					trany = 0;
+				}
+			}
+		}, 40)
+
+	}
+
+</script>
+<style>
+html, body {
+	font-size: 18px;
+	margin: 0; /* remove default margin */
+	padding: 0; /* remove default padding */
+	width: 100%; /* take full browser width */
+	height: 100%; /* take full browser height*/
+	overflow-x: hidden;
+}
+
+#plane1 {
+	transform-origin: center top;
+	touch-action: none;
+}
+
+body {
+	background-image:
+		url('https://upload.wikimedia.org/wikipedia/commons/e/e4/StarfieldSimulation.gif');
+	background-size: cover;
+}
+
+body::-webkit-scrollbar {
+	display: none;
+}
+
+#plane1 {
+	-khtml-user-select: none;
+	-o-user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#container {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+#board {
+display:table;
+position:absolute;
+left:0;
+top: 0;
+width:300px;
+height:50px;
+color:white;
+}
+</style>
+</head>
+<body>
+
+
+	<div id="container"></div>
+	<div id="board">
+	<h2 id="score">Score: 0</h2>
+	<h2 id="boost">Boost: Ready</h2>
+	</div>
+	<script>
+	var Keys = {
+		    up: false,
+		    down: false,
+		    left: false,
+		    right: false,
+		    enter: false
+		  }
+	
+		  window.onkeydown = function( e ) {
+		    var kc = e.keyCode;
+		    
+		    if ( kc === 37 ) Keys.left = true;
+		    else if ( kc === 38 ) Keys.up = true;
+		    else if ( kc === 39 ) Keys.right = true;
+		    else if ( kc === 40 ) Keys.down = true;
+		    else if(kc === 13) Keys.enter = true;
+		  };
+		  
+		  
+	</script>
+
+</body>
+</html>

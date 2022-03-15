@@ -1,0 +1,93 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Document</title>
+     <script>
+     var speed = 5.0;
+     window.onkeyup = function( e ) {
+       var kc = e.keyCode;
+       e.preventDefault();
+
+       if ( kc === 37 ) Keys.left = false;
+       else if ( kc === 38 ) Keys.up = false;
+       else if ( kc === 39 ) Keys.right = false;
+       else if ( kc === 40 ) Keys.down = false;
+     };
+
+     function update() {
+       if ( Keys.up ) {
+         
+         document.querySelector( 'div' ).style.transform += 'translateY( -'+Math.round(speed )+'px )';
+       }
+       else if ( Keys.down ) {
+        if (speed>1)
+        {   
+            document.querySelector( 'div' ).style.transform += 'translateY( -'+Math.round(speed )+'px )';
+        }
+     else {
+         speed = 1;
+         document.querySelector( 'div' ).style.transform += 'translateY( 1px )';
+     }
+       }
+
+       if ( Keys.left ) {
+         document.querySelector( 'div' ).style.transform += 'rotate( -3deg )';
+       }
+       else if ( Keys.right ) { 
+         document.querySelector( 'div' ).style.transform += 'rotate( 3deg )';
+       }
+       
+         requestAnimationFrame( update );
+     }
+     requestAnimationFrame( update );
+    </script>
+    <style>
+    @import url( "https://fonts.googleapis.com/css?family=Nunito" );
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Nunito", sans-serif;
+  font-size: 2rem;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+b {
+  display: block;
+  transform: rotate( 180deg );
+    </style>
+</head>
+<body>
+  
+   <div>
+  <b>v</b>
+</div>
+
+<script>
+  var Keys = {
+    up: false,
+    down: false,
+    left: false,
+    right: false
+  }
+
+  window.onkeydown = function( e ) {
+    var kc = e.keyCode;
+    e.preventDefault();
+
+    if ( kc === 37 ) Keys.left = true;
+    else if ( kc === 38 ) Keys.up = true;
+    else if ( kc === 39 ) Keys.right = true;
+    else if ( kc === 40 ) Keys.down = true;
+  };
+</script>
+</body>
+</html>
