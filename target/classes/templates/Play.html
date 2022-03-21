@@ -120,6 +120,7 @@ class Plane{
 			}
 		}if (!Keys.enter){  
           if(executed){ 
+        	  clearInterval(boostInterval)
             boostUp()
           } 
           }
@@ -243,51 +244,60 @@ function boostDown() {
 	if(Keys.enter){
       if (!executed) {
     	  clearInterval(boostInter)
-		if(boostDur > 10){
 			executed = true;
-		audioBoost.volume = 0.9;
-		audioBoost.play();
-		speed = 10.0;
+			audioBoost.volume = 0.9;
+			audioBoost.play();
+			speed = 10.0;
 		boostInterval = setInterval(function() {
-			if(boostDur > 0){
+			if(boostDur <= 0){
+				clearInterval(boostInterval)
+				boostUp();
+				Keys.enter = false;
+				
+			}
+			else{
 			boostDur = boostDur - 10;
+			
 			boost.value = boostDur
 			boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
 			}
-			else{
-				console.log(boostDur)
-				clearInterval(boostInterval);
-				boostUp()
-				
-			}
 		}, 1000)
+// 		}
+// 		else{
+// 			console.log("test")
+// 			boostUp()
+// 			clearInterval(boostInterval);
+			
+			
+// 		}
 		}
 	
 	}
       
 	
       }
-	}
+	
 
 function boostUp(){
 	if(executed){
 		executed = false;
 	var boost = document.getElementById("boost")
-	clearInterval(boostInterval);
+// 	clearInterval(boostInterval);
 	speed = 6.0;
 	audioBoost.pause();
 	audioBoost.currentTime = 0;
-	if(boostDur != 60){
+	
 		
 	boostInter = setInterval(function() {
+		if(boostDur >= 60){
+			boostDur = 60;
+			clearInterval(boostInter)
+		}
 		boostDur = boostDur + 5;
 		boost.value = boostDur
 		boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
 	}, 1000)
-	}
-	else{
-		clearInterval(boostInter)
-	}
+	
 	}
 }
 
