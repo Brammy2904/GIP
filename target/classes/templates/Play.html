@@ -8,16 +8,20 @@
 <script>
 var result
 var topP;
+var boostDur = 60;
 var leftP;
 var saved_moves = "";
-var count = 6;
-var count1 = 10;
 var position = 0;
+var boostInter;
 var newTop = null;
+var boostInterval = null;
 var newLeft = null;
 let keys = {};
 var turbo = true;
-var speed = 5.0;
+var speed = 6.0;
+var executed = false;
+const audioBoost = new Audio("https://sndup.net/xf25/d");
+
 var Planes = [];
 var Bullets = [];
 class Plane{
@@ -41,6 +45,7 @@ class Plane{
 		plane.style.top = 400 + "px";
 		plane.style.overflow = "hidden";
 		plane.style.left = 400 + "px"
+		plane.style.zIndex = "1"
 		plane.style.transformOrigin = "center";
 		document.getElementById("container").append(plane)
 		topP = plane.style.top.slice("p")[0]
@@ -48,33 +53,35 @@ class Plane{
 	}
 	Boost(){
 		var boost = document.getElementById("boost")
+		var value = boost.value;
 		if (turbo) {
 			speed = 10.0
 			const audio = new Audio("https://sndup.net/xf25/d");
 			audio.volume = 0.9;
 			audio.play();
 			turbo = false;
-			boost.innerHTML = "Boost: " + count;
+			document.getElementById(this.name).src = "https://iili.io/GThBNs.gif"	
 			var countdown = setInterval(function() {
-				count--
-				boost.innerHTML = "Boost: " + count;
+				boostDur = boostDur - 10;
+				document.getElementById("boost").value = boostDur
+				
+				boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
 
 			}, 1000)
 			setTimeout(function() {
 				clearInterval(countdown)
-				count = 6;
-				boost.innerHTML = "Boost: Getting Ready: 10"
-				speed = 5.0;
+				document.getElementById(Planes[0].name).src ="https://i.pinimg.com/originals/3b/03/94/3b0394153492f7a2e31e80bb9e4c4fb5.gif"
+				speed = 6.0;
 				audio.pause()
 				var klaar = setInterval(function() {
-					count1--
-					boost.innerHTML = "Boost: Getting Ready: "+count1;
+					boostDur = boostDur + 6;
+					document.getElementById("boost").value = boostDur
+					boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
 				}, 1000)
 				setTimeout(function() {
 					clearInterval(klaar)
-					count1 = 10;
 					turbo = true;
-					boost.innerHTML = "Boost: Ready"
+					
 
 				}, 10000)
 			}, 6000)
@@ -85,12 +92,11 @@ class Plane{
 		}
 	}
 	Move() {
-		var plane = document.getElementById("plane1")
+		var plane = document.getElementById(this.name)
 		var rect = plane.getBoundingClientRect();
-		saved_moves = document.getElementById("plane1").style.transform;
+		saved_moves = document.getElementById(this.name).style.transform; 	
 		if (Keys.up) {
 			if (rect.top <= 0) {
-
 				plane.style.top = parseInt(plane.style.top) + 6 + "px"
 			}
 			if (rect.bottom >= (window.innerHeight || document.documentElement.clientHeight)) {
@@ -104,18 +110,24 @@ class Plane{
 			} else {
 				plane.style.transform += 'translateY( -' + Math.round(speed) + 'px )';
 			}
-		}
-
-		if (Keys.left) {
-			plane.style.transform += 'rotate( -3deg )';
-		} else if (Keys.right) {
+		} if (Keys.right) {
 			plane.style.transform += 'rotate( 3deg )';
+		} else if (Keys.left) {
+			plane.style.transform += 'rotate( -3deg )';
+		} if (Keys.enter) {
+			if (!executed) {
+				boostDown()
+			}
+		}if (!Keys.enter){  
+          if(executed){ 
+            boostUp()
+          } 
+          }
+		if (Keys.space) {  			
+			Planes[0].Fire(); 		
+			Keys.space = false; 		
 		}
-		
-		requestAnimationFrame(function() {
-			Planes[0].Move()
-		});	
-	}
+          requestAnimationFrame(function() { Planes[0].Move() }); }
 	Fire() {
 		var bullet = new Bullet(20, 20 , "https://i.ibb.co/8zTJrZC/bullet.png")
 		Bullets.push(bullet);
@@ -145,6 +157,7 @@ class Bullet{
 		bullet.style.width = this.width + "px";
 		bullet.style.height = this.height + "px";
 		bullet.setAttribute("class", "bullet")
+		bullet.style.zIndex = "0"
 		bullet.style.top = parseInt(document.getElementById("plane1").style.top) +50 +"px";
 		bullet.style.left = parseInt(document.getElementById("plane1").style.left) + 40+"px"
 		bullet.style.transform = saved_moves;
@@ -167,28 +180,28 @@ class Bullet{
 }
 window.onkeyup = function(e) {
 	var kc = e.keyCode;
-	if (kc === 37) Keys.left = false;
-	else if (kc === 38) Keys.up = false;
-	else if (kc === 39) Keys.right = false;
-	else if (kc === 40) Keys.down = false;
-	else if (kc === 13) Keys.enter = false;
+	if(kc === 32){ Keys.space = true;}
+    else if(kc === 13){ Keys.enter = false;}
+    else if ( kc === 39 ){ Keys.right = false;}
+    else if ( kc === 38 ){ Keys.up = false;}
+    else if ( kc === 37 ){ Keys.left = false;}
+
 };
 
 window.onload = function() {
 	makePlane();
-	var base = document.getElementById('plane1')
-	var rect = base.getBoundingClientRect();
-	// 		animate()
-	document.addEventListener("keyup", function(e) {
-		if (e.keyCode === 32) {
-			Planes[0].Fire()
-		}
-		if (e.keyCode === 13) {
-			Planes[0].Boost();
-		}
-	})
 	update()
+	const slider = document.getElementById("boost")
+	const min = slider.min
+	const max = slider.max
+	const value = slider.value
 
+	slider.style.background = `linear-gradient(to right, lime 0%, lime ${(value-min)/(max-min)*100}%, black ${(value-min)/(max-min)*100}%, black 100%)`
+
+	slider.oninput = function() {
+	  this.style.background = `linear-gradient(to right, lime 0%, lime ${(this.value-this.min)/(this.max-this.min)*100}%, black ${(this.value-this.min)/(this.max-this.min)*100}%, black 100%)`
+	};
+	
 }
 
 function makePlane() {
@@ -198,7 +211,9 @@ function makePlane() {
 }
 
 function update() {
-	Planes[0].Move()
+	requestAnimationFrame(function() {
+		Planes[0].Move()
+	});
 }
 function fpsMeter() {
     let prevTime = Date.now(),
@@ -222,10 +237,58 @@ function fpsMeter() {
   fpsMeter();
 
 
+function boostDown() {
+	
+	var boost = document.getElementById("boost")
+	if(Keys.enter){
+      if (!executed) {
+    	  clearInterval(boostInter)
+		if(boostDur > 10){
+			executed = true;
+		audioBoost.volume = 0.9;
+		audioBoost.play();
+		speed = 10.0;
+		boostInterval = setInterval(function() {
+			if(boostDur > 0){
+			boostDur = boostDur - 10;
+			boost.value = boostDur
+			boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
+			}
+			else{
+				console.log(boostDur)
+				clearInterval(boostInterval);
+				boostUp()
+				
+			}
+		}, 1000)
+		}
+	
+	}
+      
+	
+      }
+	}
 
-function Fire() {
-	Planes[0].Fire();
-
+function boostUp(){
+	if(executed){
+		executed = false;
+	var boost = document.getElementById("boost")
+	clearInterval(boostInterval);
+	speed = 6.0;
+	audioBoost.pause();
+	audioBoost.currentTime = 0;
+	if(boostDur != 60){
+		
+	boostInter = setInterval(function() {
+		boostDur = boostDur + 5;
+		boost.value = boostDur
+		boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
+	}, 1000)
+	}
+	else{
+		clearInterval(boostInter)
+	}
+	}
 }
 
 </script>
@@ -287,6 +350,19 @@ body::-webkit-scrollbar {
 	width: 100px;
 	height: 50px;
 }
+
+#boost {
+	border-radius: 8px;
+	height: 4px;
+	width: 100px;
+	outline: none;
+	-webkit-appearance: none;
+	border: white solid 0.9px;
+}
+
+input[type='range']::-webkit-slider-thumb {
+	display: none;
+}
 </style>
 </head>
 <body>
@@ -295,8 +371,8 @@ body::-webkit-scrollbar {
 	<div id="container"></div>
 	<div id="board">
 		<h2 id="score">Score: 0</h2>
-		<h2 id="boost">Boost: Ready</h2>
-
+		<!-- 		<h2 id="boost">Boost: Ready</h2> -->
+		<input id="boost" type="range" min="0" value="60" max="60" />
 	</div>
 	<div id="fps">
 		<p id="text">
@@ -304,20 +380,19 @@ body::-webkit-scrollbar {
 	<script>
 	var Keys = {
 		    up: false,
-		    down: false,
 		    left: false,
 		    right: false,
-		    enter: false
+		    enter: false,
+		    space:false
 		  }
 	
 		  window.onkeydown = function( e ) {
 		    var kc = e.keyCode;
-		    
-		    if ( kc === 37 ) Keys.left = true;
-		    else if ( kc === 38 ) Keys.up = true;
-		    else if ( kc === 39 ) Keys.right = true;
-		    else if ( kc === 40 ) Keys.down = true;
-		    else if(kc === 13) Keys.enter = true;
+		    if(kc === 32){ Keys.space = false;}
+		    else if(kc === 13){ Keys.enter = true;}
+		    else if ( kc === 39 ){ Keys.right = true;}
+		    else if ( kc === 38 ){ Keys.up = true;}
+		    else if ( kc === 37 ){ Keys.left = true;}
 		  };
 		  
 		  
