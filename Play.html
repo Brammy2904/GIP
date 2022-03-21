@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="ISO-8859-1">
+<title>1v1 Space Shooter</title>
+<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+
+<script>
+let keys = {};
+var Planes = [];
+var Bullets = [];
+class Plane {
+	width;
+	height;
+	imgPlane;
+	imgFlames;
+	name;
+	boostDur = 60;
+	boostInter;
+	boostInterval;
+	saved_moves;
+	speed = 6.0;
+	audioBoost = new Audio("https://sndup.net/xf25/d");
+	executed = false;
+	constructor(width, height, imgPlane, imgFlames, name) {
+		this.width = width;
+		this.height = height;
+		this.imgPlane = imgPlane;
+		this.imgFlames = imgFlames;
+		this.name = name;
+	}
+	makePlane() {
+		var div = document.createElement("div")
+		div.style.position = "relative";
+		div.style.width = 100 + "px";
+		div.style.height = 100 + "px";
+		div.style.top = parseInt(window.innerHeight / 2) + "px"
+		div.style.left = 100 + "px";
+		div.setAttribute("id", this.name)
+		div.style.overflow = "hidden";
+		div.style.zIndex = "1"
+		div.style.transformOrigin = "center";
+		var plane = document.createElement("img")
+		plane.style.width = 90 + "%";
+		plane.style.height = 70 + "%";
+		plane.src = this.imgPlane
+		plane.setAttribute("id", this.name + "P")
+		plane.style.position = "absolute";
+		plane.style.zIndex = "2"
+		div.append(plane)
+		var flames = document.createElement("img")
+		flames.style.width = 90 + "%";
+		flames.style.height = 100 + "%";
+		flames.setAttribute("id", this.name + "F")
+		flames.src = this.imgFlames;
+		flames.style.position = "absolute";
+		flames.style.zIndex = "3"
+		div.append(flames)
+
+
+		document.getElementById("container").append(div)
+	}
+	boostDown() {
+		var plane = document.getElementById("plane1P")
+		var flames = document.getElementById("plane1F")
+		var boost = document.getElementById("boost")
+		if (!this.executed) {
+			clearInterval(this.boostInter)
+			this.executed = true;
+			this.speed = 10.0;
+			plane.style.width = 90 + "%";
+			plane.style.height = 70 + "%";
+			flames.style.width = 90 + "%";
+			flames.style.height = 100 + "%";
+			flames.src = "C:\\Users\\verbe\\eclipse-workspace\\GIP-main\\GIP-main\\src\\main\\resources\\flames3.gif";
+			this.audioBoost.volume = 0.9;
+			this.audioBoost.play();
+			this.boostInterval = setInterval(function(plane) {
+				return function() {
+					if (plane.boostDur <= 0) {
+						clearInterval(plane.boostInterval)
+						Planes[0].boostUp();
+						Keys.ctrl = false;
+					} else {
+						plane.boostDur = plane.boostDur - 10;
+
+						boost.value = plane.boostDur
+						boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
+					}
+				};
+			}(this), 1000)
+		}
+	}
+	boostUp() {
+		if (this.executed) {
+			this.executed = false;
+			var boost = document.getElementById("boost")
+			var flames = document.getElementById(this.name + "F")
+			var plane = document.getElementById(this.name + "P")
+			this.speed = 6.0;
+			this.audioBoost.pause();
+			this.audioBoost.currentTime = 0;
+			plane.style.height = 70 + "%";
+			flames.src = "C:\\Users\\verbe\\eclipse-workspace\\GIP-main\\GIP-main\\src\\main\\resources\\flames.gif";
+
+
+			this.boostInter = setInterval(function(plane) {
+				return function() {
+					console.log(plane.boostDur)
+					if (plane.boostDur >= 60) {
+						plane.boostDur = 60;
+						clearInterval(plane.boostInter)
+					}
+					plane.boostDur = plane.boostDur + 5;
+					boost.value = plane.boostDur
+					boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
+				};
+			}(this), 1000)
+
+		}
+	}
+	Move() {
+		var plane = document.getElementById(this.name)
+		var rect = plane.getBoundingClientRect();
+		this.saved_moves = document.getElementById(this.name).style.transform;
+		if (Keys.up) {
+			if (rect.top <= 0) {
+				plane.style.top = parseInt(plane.style.top) + 6 + "px"
+			}
+			if (rect.bottom >= (window.innerHeight || document.documentElement.clientHeight)) {
+				plane.style.top = parseInt(plane.style.top) - 6 + "px"
+			}
+			if (rect.left <= 0) {
+				plane.style.left = parseInt(plane.style.left) + 6 + "px"
+			}
+			if (rect.right >= (window.innerWidth || document.documentElement.clientWidth)) {
+				plane.style.left = parseInt(plane.style.left) - 6 + "px"
+			} else {
+				plane.style.transform += 'translateY( -' + Math.round(this.speed) + 'px )';
+			}
+		}
+		if (Keys.right) {
+			plane.style.transform += 'rotate( 3deg )';
+		} else if (Keys.left) {
+			plane.style.transform += 'rotate( -3deg )';
+		}
+		if (Keys.ctrl) {
+			if (!Planes[0].executed) {
+				Planes[0].boostDown()
+			}
+		}
+		if (!Keys.ctrl) {
+			if (Planes[0].executed) {
+				clearInterval(Planes[0].boostInterval)
+				Planes[0].boostUp()
+			}
+		}
+		if (Keys.space) {
+			Planes[0].Fire();
+			Keys.space = false;
+		}
+		requestAnimationFrame(function() {
+			Planes[0].Move()
+		});
+	}
+	Fire() {
+		var bullet = new Bullet(20, 20, "https://i.ibb.co/8zTJrZC/bullet.png")
+		Bullets.push(bullet);
+		Bullets[0].makeBullet()
+	}
+}
+class Bullet {
+	width;
+	height;
+	img;
+	constructor(width, height, img) {
+		this.width = width;
+		this.height = height;
+		this.img = img;
+
+	}
+	makeBullet() {
+		var trany = 0;
+		var saved = Planes[0].saved_moves
+		var i = 5;
+		const audio = new Audio("https://sndup.net/xtw5/d");
+		audio.volume = 0.9;
+		audio.play();
+		var bullet = document.createElement("img")
+		bullet.src = this.img;
+		bullet.style.position = "absolute";
+		bullet.style.width = this.width + "px";
+		bullet.style.height = this.height + "px";
+		bullet.setAttribute("class", "bullet")
+		bullet.style.zIndex = "0"
+		bullet.style.top = parseInt(document.getElementById("plane1").style.top) + 50 + "px";
+		bullet.style.left = parseInt(document.getElementById("plane1").style.left) + 40 + "px"
+		bullet.style.transform = saved;
+		document.getElementById("container").append(bullet)
+		var inter = setInterval(function() {
+			trany -= 7;
+			bullet.style.transform = saved + 'translateY(' + trany + 'vmin)';
+			var bullets = document.getElementsByClassName("bullet")
+			for (var i = 0; i < bullets.length; i++) {
+				const bounding = bullets[i].getBoundingClientRect();
+
+				if (bounding.top < 0 || bounding.left < 0 || bounding.bottom > (window.innerHeight || document.documentElement.clientHeight) || bounding.right > (window.innerWidth || document.documentElement.clientWidth)) {
+					clearInterval(inter)
+					document.getElementById("container").removeChild(bullets[i])
+					trany = 0;
+				}
+			}
+		}, 40)
+	}
+}
+window.onkeyup = function(e) {
+	var kc = e.keyCode;
+	if (kc === 32) {
+		Keys.space = true;
+	}
+	if (kc === 17) {
+		Keys.ctrl = false;
+	}
+	if (kc === 39) {
+		Keys.right = false;
+	}
+	if (kc === 38) {
+		Keys.up = false;
+	}
+	if (kc === 37) {
+		Keys.left = false;
+	}
+
+};
+
+window.onload = function() {
+	makePlane();
+	update()
+	const slider = document.getElementById("boost")
+	const min = slider.min
+	const max = slider.max
+	const value = slider.value
+
+	slider.style.background = `linear-gradient(to right, lime 0%, lime ${(value-min)/(max-min)*100}%, black ${(value-min)/(max-min)*100}%, black 100%)`
+
+	slider.oninput = function() {
+		this.style.background = `linear-gradient(to right, lime 0%, lime ${(this.value-this.min)/(this.max-this.min)*100}%, black ${(this.value-this.min)/(this.max-this.min)*100}%, black 100%)`
+	};
+
+}
+
+function makePlane() {
+	plane = new Plane(100, 100, "C:\\Users\\verbe\\eclipse-workspace\\GIP-main\\GIP-main\\src\\main\\resources\\Schip.png", "C:\\Users\\verbe\\eclipse-workspace\\GIP-main\\GIP-main\\src\\main\\resources\\flames.gif", "plane1")
+	Planes.push(plane)
+	Planes[0].makePlane();
+}
+
+function update() {
+	requestAnimationFrame(function() {
+		Planes[0].Move()
+	});
+}
+
+function fpsMeter() {
+	let prevTime = Date.now(),
+		frames = 0;
+
+	requestAnimationFrame(function loop() {
+		const time = Date.now();
+		frames++;
+		if (time > prevTime + 1000) {
+			let fps = Math.round((frames * 1000) / (time - prevTime));
+			prevTime = time;
+			frames = 0;
+			document.getElementById("text").innerHTML = "";
+			document.getElementById("text").innerHTML = "FPS: " + fps;
+		}
+
+		requestAnimationFrame(loop);
+	});
+}
+fpsMeter();
+</script>
+<style>
+html, body {
+	font-size: 18px;
+	margin: 0; /* remove default margin */
+	padding: 0; /* remove default padding */
+	width: 100%; /* take full browser width */
+	height: 100%; /* take full browser height*/
+	overflow-x: hidden;
+}
+
+#plane1 {
+	transform-origin: center top;
+	touch-action: none;
+}
+
+body {
+	background-image:
+		url('https://upload.wikimedia.org/wikipedia/commons/e/e4/StarfieldSimulation.gif');
+	background-size: cover;
+}
+
+body::-webkit-scrollbar {
+	display: none;
+}
+
+#plane1 {
+	-khtml-user-select: none;
+	-o-user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#container {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+#board {
+	display: table;
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 300px;
+	height: 50px;
+	color: white;
+}
+
+#fps {
+	position: fixed;
+	left: 95%;
+	top: 0%;
+	color: white;
+	width: 100px;
+	height: 50px;
+}
+
+#boost {
+	border-radius: 8px;
+	height: 4px;
+	width: 100px;
+	outline: none;
+	-webkit-appearance: none;
+	border: white solid 0.9px;
+}
+
+input[type='range']::-webkit-slider-thumb {
+	display: none;
+}
+</style>
+</head>
+<body>
+
+
+	<div id="container"></div>
+	<div id="board">
+		<h2 id="score">Score: 0</h2>
+		<!-- 		<h2 id="boost">Boost: Ready</h2> -->
+		<input id="boost" type="range" min="0" value="60" max="60" />
+	</div>
+	<div id="fps">
+		<p id="text">
+	</div>
+	<script>
+	var Keys = {
+		    up: false,
+		    left: false,
+		    right: false,
+		    ctrl: false,
+		    space:false
+		  }
+	
+		  window.onkeydown = function( e ) {
+		    var kc = e.keyCode;
+		    if(kc === 32){ Keys.space = false;}
+		    if(kc === 17){ Keys.ctrl = true;}
+		    if ( kc === 39 ){ Keys.right = true;}
+		    if ( kc === 38 ){ Keys.up = true;}
+		    if ( kc === 37 ){ Keys.left = true;}
+		  };
+		  
+		  
+	</script>
+
+</body>
+</html>
