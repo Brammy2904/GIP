@@ -20,22 +20,26 @@ class Plane {
 	boostInterval;
 	saved_moves;
 	speed = 6.0;
+	planeTop;
+	planeLeft;
 	audioBoost = new Audio("https://sndup.net/xf25/d");
 	executed = false;
-	constructor(width, height, imgPlane, imgFlames, name) {
+	constructor(width, height, imgPlane, imgFlames, name, planeTop, planeLeft) {
 		this.width = width;
 		this.height = height;
 		this.imgPlane = imgPlane;
 		this.imgFlames = imgFlames;
 		this.name = name;
+		this.planeTop = planeTop;
+		this.planeLeft = planeLeft;
 	}
 	makePlane() {
 		var div = document.createElement("div")
 		div.style.position = "relative";
 		div.style.width = 100 + "px";
 		div.style.height = 100 + "px";
-		div.style.top = parseInt(window.innerHeight / 2) + "px"
-		div.style.left = 100 + "px";
+		div.style.top = this.planeTop + "px"
+		div.style.left = this.planeLeft + "px";
 		div.setAttribute("id", this.name)
 		div.style.overflow = "hidden";
 		div.style.zIndex = "1"
@@ -67,6 +71,7 @@ class Plane {
 		if (!this.executed) {
 			clearInterval(this.boostInter)
 			this.executed = true;
+			if(!this.boostDur <= 0){
 			this.speed = 10.0;
 			plane.style.width = 90 + "%";
 			plane.style.height = 70 + "%";
@@ -79,16 +84,17 @@ class Plane {
 				return function() {
 					if (plane.boostDur <= 0) {
 						clearInterval(plane.boostInterval)
-						Planes[0].boostUp();
+						Planes.find(o => o.name === plane.name).boostUp();
 						Keys.ctrl = false;
 					} else {
-						plane.boostDur = plane.boostDur - 10;
+						plane.boostDur = plane.boostDur - 2.50;
 
 						boost.value = plane.boostDur
 						boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
 					}
 				};
-			}(this), 1000)
+			}(this), 250)
+			}
 		}
 	}
 	boostUp() {
@@ -106,16 +112,15 @@ class Plane {
 
 			this.boostInter = setInterval(function(plane) {
 				return function() {
-					console.log(plane.boostDur)
 					if (plane.boostDur >= 60) {
 						plane.boostDur = 60;
 						clearInterval(plane.boostInter)
 					}
-					plane.boostDur = plane.boostDur + 5;
+					plane.boostDur = plane.boostDur + 2.50;
 					boost.value = plane.boostDur
 					boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
 				};
-			}(this), 1000)
+			}(this), 500)
 
 		}
 	}
@@ -145,28 +150,34 @@ class Plane {
 			plane.style.transform += 'rotate( -3deg )';
 		}
 		if (Keys.ctrl) {
-			if (!Planes[0].executed) {
-				Planes[0].boostDown()
+			if (!Planes.find(o => o.name === this.name).executed) {
+				Planes.find(o => o.name === this.name).boostDown()
 			}
 		}
 		if (!Keys.ctrl) {
-			if (Planes[0].executed) {
+			if (Planes.find(o => o.name === this.name).executed) {
 				clearInterval(Planes[0].boostInterval)
-				Planes[0].boostUp()
+				Planes.find(o => o.name === this.name).boostUp()
 			}
 		}
 		if (Keys.space) {
-			Planes[0].Fire();
+			Planes.find(o => o.name === this.name).Fire();
 			Keys.space = false;
 		}
-		requestAnimationFrame(function() {
-			Planes[0].Move()
-		});
+		var animation = requestAnimationFrame(function(plane) {
+			return function() {
+			Planes.find(o => o.name === plane.name).Move()
+			};
+		}(this));
+		
 	}
 	Fire() {
 		var bullet = new Bullet(20, 20, "https://i.ibb.co/8zTJrZC/bullet.png")
 		Bullets.push(bullet);
-		Bullets[0].makeBullet()
+		const audio = new Audio("https://sndup.net/xtw5/d");
+		audio.volume = 0.9;
+		audio.play();
+		Bullets[0].makeBullet(this)
 	}
 }
 class Bullet {
@@ -179,13 +190,11 @@ class Bullet {
 		this.img = img;
 
 	}
-	makeBullet() {
+	makeBullet(plane) {
+		
 		var trany = 0;
-		var saved = Planes[0].saved_moves
+		var saved = Planes.find(o => o.name === plane.name).saved_moves
 		var i = 5;
-		const audio = new Audio("https://sndup.net/xtw5/d");
-		audio.volume = 0.9;
-		audio.play();
 		var bullet = document.createElement("img")
 		bullet.src = this.img;
 		bullet.style.position = "absolute";
@@ -250,7 +259,7 @@ window.onload = function() {
 }
 
 function makePlane() {
-	plane = new Plane(100, 100, "C:\\Users\\verbe\\eclipse-workspace\\GIP-main\\GIP-main\\src\\main\\resources\\Schip.png", "C:\\Users\\verbe\\eclipse-workspace\\GIP-main\\GIP-main\\src\\main\\resources\\flames.gif", "plane1")
+	plane = new Plane(100, 100, "C:\\Users\\verbe\\eclipse-workspace\\GIP-main\\GIP-main\\src\\main\\resources\\Schip.png", "C:\\Users\\verbe\\eclipse-workspace\\GIP-main\\GIP-main\\src\\main\\resources\\flames.gif", "plane1", parseInt(window.innerHeight / 2), 100)
 	Planes.push(plane)
 	Planes[0].makePlane();
 }
@@ -298,8 +307,8 @@ html, body {
 
 body {
 	background-image:
-		url('https://upload.wikimedia.org/wikipedia/commons/e/e4/StarfieldSimulation.gif');
-	background-size: cover;
+		url('https://s3.gaming-cdn.com/images/products/7676/screenshot/spel-steam-agos-a-game-of-space-wallpaper-3.jpg');
+	background-size: contain;
 }
 
 body::-webkit-scrollbar {
