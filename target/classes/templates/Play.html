@@ -1,197 +1,518 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="ISO-8859-1">
-<title>Insert title here</title>
+<title>1v1 Space Shooter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
-
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script
+	src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script>
-var result
-var topP;
-var boostDur = 60;
-var leftP;
-var saved_moves = "";
-var position = 0;
-var boostInter;
-var newTop = null;
-var boostInterval = null;
-var newLeft = null;
-let keys = {};
-var turbo = true;
-var speed = 6.0;
-var executed = false;
-const audioBoost = new Audio("https://sndup.net/xf25/d");
 
+let keys = {};
+var imageChoice = null;
+var imageChoiceBullet = null;
 var Planes = [];
 var Bullets = [];
-class Plane{
+var id;
+var client1;
+var client2;
+var maxHeight;
+var maxWidth;
+class Plane {
 	width;
 	height;
-	img;
+	imgPlane;
+	imgFlames;
 	name;
-	constructor(width, height, img, name){
-		this.width = width; 
+	boostDur = 60;
+	boostInter;
+	boostInterval;
+	saved_moves = "";
+	speed = 6.0;
+	planeTop;
+	planeLeft;
+	audioShoot = new Audio("https://sndup.net/dtzz/d");
+	audioBoost = new Audio("https://sndup.net/sqkp/d");
+	soundShoot = false;
+	executed = false;
+	constructor(width, height, imgPlane, imgFlames, name, planeTop, planeLeft) {
+		this.width = width;
 		this.height = height;
-		this.img = img;
+		this.imgPlane = imgPlane;
+		this.imgFlames = imgFlames;
 		this.name = name;
+		this.planeTop = planeTop;
+		this.planeLeft = planeLeft;
 	}
 	makePlane() {
+		var div = document.createElement("div")
+		div.style.position = "relative";
+		div.style.width = 100 + "px";
+		div.style.height = 100 + "px";
+		div.style.top = this.planeTop + "%"
+		div.style.left = this.planeLeft + "%";
+		div.setAttribute("id", this.name)
+		div.style.overflow = "hidden";
+		div.style.zIndex = "1"
+		div.style.transformOrigin = "center";
 		var plane = document.createElement("img")
-		plane.src = this.img;
-		plane.style.width = this.width +"px";
-		plane.style.height = this.height +"px"
-		plane.style.position = "relative";
-		plane.setAttribute("id", this.name)
-		plane.style.top = 400 + "px";
-		plane.style.overflow = "hidden";
-		plane.style.left = 400 + "px"
-		plane.style.zIndex = "1"
-		plane.style.transformOrigin = "center";
-		document.getElementById("container").append(plane)
-		topP = plane.style.top.slice("p")[0]
-		leftP = plane.style.left.slice("p")[0];
+		plane.style.width = 90 + "%";
+		plane.style.height = 70 + "%";
+		plane.src = this.imgPlane
+		plane.setAttribute("id", this.name + "P")
+		plane.style.position = "absolute";
+		plane.style.zIndex = "2"
+		div.append(plane)
+		var flames = document.createElement("img")
+		flames.style.width = 90 + "%";
+		flames.style.height = 100 + "%";
+		flames.setAttribute("id", this.name + "F")
+		flames.src = this.imgFlames;
+		flames.style.position = "absolute";
+		flames.style.zIndex = "3"
+		div.append(flames)
+
+
+		document.getElementById("container").append(div)
 	}
-	Boost(){
+	boostDown() {
+		var plane = document.getElementById(this.name +"P")
+		var flames = document.getElementById(this.name+"F")
 		var boost = document.getElementById("boost")
-		var value = boost.value;
-		if (turbo) {
-			speed = 10.0
-			const audio = new Audio("https://sndup.net/xf25/d");
-			audio.volume = 0.9;
-			audio.play();
-			turbo = false;
-			document.getElementById(this.name).src = "https://iili.io/GThBNs.gif"	
-			var countdown = setInterval(function() {
-				boostDur = boostDur - 10;
-				document.getElementById("boost").value = boostDur
-				
-				boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
+		if (!this.executed) {
+			clearInterval(this.boostInter)
+			this.executed = true;
+			if(!this.boostDur <= 0){
+			this.speed = 10.0;
+			plane.style.width = 90 + "%";
+			plane.style.height = 70 + "%";
+			flames.style.width = 90 + "%";
+			flames.style.height = 100 + "%";
+			flames.src = "https://i.ibb.co/xj6XdgW/flames3.gif";
+			
+			this.audioBoost.volume = 0.9;
+			this.audioBoost.play();
+			this.boostInterval = setInterval(function(plane) {
+				return function() {
+					if (plane.boostDur <= 0) {
+						clearInterval(plane.boostInterval)
+						Planes.find(o => o.name === plane.name).boostUp();
+						Keys.ctrl = false;
+					} else {
+						plane.boostDur = plane.boostDur - 2.50;
 
-			}, 1000)
-			setTimeout(function() {
-				clearInterval(countdown)
-				document.getElementById(Planes[0].name).src ="https://i.pinimg.com/originals/3b/03/94/3b0394153492f7a2e31e80bb9e4c4fb5.gif"
-				speed = 6.0;
-				audio.pause()
-				var klaar = setInterval(function() {
-					boostDur = boostDur + 6;
-					document.getElementById("boost").value = boostDur
+						boost.value = plane.boostDur
+						boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
+					}
+				};
+			}(this), 250)
+			}
+			
+		}
+	}
+	boostUp() {
+		if (this.executed) {
+			this.executed = false;
+			if(this.name === "plane1"){
+			stompClient.send("/app/plane/boost/1", {}, "false")
+			}
+			if(this.name === "plane2"){
+				stompClient.send("/app/plane/boost/2", {}, "false")
+			}
+			var boost = document.getElementById("boost")
+			var flames = document.getElementById(this.name + "F")
+			var plane = document.getElementById(this.name + "P")
+			this.speed = 6.0;
+			
+			this.audioBoost.pause();
+			
+			this.audioBoost.currentTime = 0;
+			
+			plane.style.height = 70 + "%";
+			flames.src = this.imgFlames;
+
+			
+			this.boostInter = setInterval(function(plane) {
+				return function() {
+					if (plane.boostDur >= 60) {
+						plane.boostDur = 60;
+						clearInterval(plane.boostInter)
+					}
+					plane.boostDur = plane.boostDur + 2.50;
+					boost.value = plane.boostDur
 					boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
-				}, 1000)
-				setTimeout(function() {
-					clearInterval(klaar)
-					turbo = true;
-					
+				};
+			}(this), 500)
+			
 
-				}, 10000)
-			}, 6000)
-		} else {
-			const audio = new Audio("https://sndup.net/nngh/d");
-			audio.volume = 0.9;
-			audio.play();
 		}
 	}
 	Move() {
 		var plane = document.getElementById(this.name)
 		var rect = plane.getBoundingClientRect();
-		saved_moves = document.getElementById(this.name).style.transform; 	
+		this.saved_moves = document.getElementById(this.name).style.transform;
+		var move = "";
 		if (Keys.up) {
 			if (rect.top <= 0) {
-				plane.style.top = parseInt(plane.style.top) + 6 + "px"
+				plane.style.top = parseInt(plane.style.top) + 1 + "%"
+// 				var x = document.getElementById(this.name).getBoundingClientRect().left;
+// 				var y = document.getElementById(this.name).getBoundingClientRect().top;
+// 				var coords = {"x": x, "y": y}
+// 				stompClient.send("/app/plane1", {}, JSON.stringify(coords));
+				
 			}
-			if (rect.bottom >= (window.innerHeight || document.documentElement.clientHeight)) {
-				plane.style.top = parseInt(plane.style.top) - 6 + "px"
+			if (rect.bottom >= maxHeight) {
+				plane.style.top = parseInt(plane.style.top) - 1 + "%"
+// 				var x = document.getElementById(this.name).getBoundingClientRect().left;
+// 				var y = document.getElementById(this.name).getBoundingClientRect().top;
+// 				var coords = {"x": x, "y": y}
+// 				stompClient.send("/app/plane1", {}, JSON.stringify(coords));
 			}
 			if (rect.left <= 0) {
-				plane.style.left = parseInt(plane.style.left) + 6 + "px"
+				plane.style.left = parseInt(plane.style.left) + 1 + "%"
+// 				var x = document.getElementById(this.name).getBoundingClientRect().left;
+// 				var y = document.getElementById(this.name).getBoundingClientRect().top;
+// 				var coords = {"x": x, "y": y}
+// 				stompClient.send("/app/plane1", {}, JSON.stringify(coords));
 			}
-			if (rect.right >= (window.innerWidth || document.documentElement.clientWidth)) {
-				plane.style.left = parseInt(plane.style.left) - 6 + "px"
+			if (rect.right >= maxWidth) {
+				plane.style.left = parseInt(plane.style.left) - 1 + "%"
+// 				var x = document.getElementById(this.name).getBoundingClientRect().left;
+// 				var y = document.getElementById(this.name).getBoundingClientRect().top;
+// 				var coords = {"x": x, "y": y}
+// 				stompClient.send("/app/plane1", {}, JSON.stringify(coords));
 			} else {
-				plane.style.transform += 'translateY( -' + Math.round(speed) + 'px )';
+				plane.style.transform += 'translateY( -' + Math.round(this.speed) / 10 + 'vh )';
+				move = move +' translateY( -' + Math.round(this.speed) /10 + 'vh )'
+// 				var x = parseInt(document.getElementById(this.name).style.left);
+// 				var y = parseInt(document.getElementById(this.name).style.top);
+// 				var saved = document.getElementById(this.name).style.transform
+// 				var coords = {"x": x, "y": y, "transform": this.saved_moves}
+// 				stompClient.send("/app/plane1", {}, JSON.stringify(coords));
+				
 			}
-		} if (Keys.right) {
+		}
+		if (Keys.right) {
 			plane.style.transform += 'rotate( 3deg )';
+			move = move + ' rotate( 3deg )'
+// 			var saved = document.getElementById(this.name).style.transform
+// 			var coords = {"transform": saved}
+// 			stompClient.send("/app/plane1", {}, JSON.stringify(coords));
 		} else if (Keys.left) {
 			plane.style.transform += 'rotate( -3deg )';
-		} if (Keys.enter) {
-			if (!executed) {
-				boostDown()
-			}
-		}if (!Keys.enter){  
-          if(executed){ 
-        	  clearInterval(boostInterval)
-            boostUp()
-          } 
-          }
-		if (Keys.space) {  			
-			Planes[0].Fire(); 		
-			Keys.space = false; 		
+			move = move + ' rotate( -3deg )'
+// 			var saved = document.getElementById(this.name).style.transform
+// 			var coords = {"transform": saved}
+// 			stompClient.send("/app/plane1", {}, JSON.stringify(coords));
 		}
-          requestAnimationFrame(function() { Planes[0].Move() }); }
+		if (Keys.ctrl) {
+			if (!Planes.find(o => o.name === this.name).executed) {
+				Planes.find(o => o.name === this.name).boostDown()
+				if(this.name === "plane1"){
+				stompClient.send("/app/plane/boost/1", {}, "true")
+				}
+				if(this.name === "plane2"){
+					stompClient.send("/app/plane/boost/2", {}, "true")
+				}
+			}
+		}
+		if (!Keys.ctrl) {
+			if (Planes.find(o => o.name === this.name).executed) {
+				clearInterval(Planes.find(o => o.name === this.name).boostInterval)
+				Planes.find(o => o.name === this.name).boostUp()
+			
+			}
+		}
+		if (Keys.shift) {
+			if(this.name === "plane1"){
+			Planes.find(o => o.name === this.name).Fire();
+			stompClient.send("/app/plane/shoot/1", {}, "true")
+			if(id != client2 && this.soundShoot){
+				this.audioShoot.pause();
+				this.audioShoot.currentTime = 0;
+				this.soundShoot = false;
+				}
+			if(id != client2){
+				this.audioShoot.volume = 0.9;
+				this.audioShoot.play();
+				this.soundShoot = true;
+			}
+			Keys.shift = false;
+			}
+			if(this.name === "plane2"){
+				Planes.find(o => o.name === this.name).Fire();
+				stompClient.send("/app/plane/shoot/2", {}, "true")
+				if(id != client1 && this.soundShoot){
+					this.audioShoot.pause();
+					this.audioShoot.currentTime = 0;
+					this.soundShoot = false;
+					}
+				if(id != client1){
+					this.audioShoot.volume = 0.9;
+					this.audioShoot.play();
+					this.soundShoot = true;
+				}
+				Keys.shift = false;
+			}
+			
+		}
+// 		if(!Keys.shift){
+			
+// 		}
+		var x = parseInt(document.getElementById(this.name).style.left);
+		var y = parseInt(document.getElementById(this.name).style.top);
+		this.saved_moves += move;
+		
+		
+		if(this.name === "plane1"){
+			var coords = {"x": x, "y": y, "transform": move}
+		stompClient.send("/app/plane/1", {}, JSON.stringify(coords));
+		}
+		if(this.name === "plane2"){
+			var coords = {"x": x, "y": y, "transform": move}
+			stompClient.send("/app/plane/2", {}, JSON.stringify(coords));
+		}
+		var animation = requestAnimationFrame(function(plane) {
+			return function() {
+			Planes.find(o => o.name === plane.name).Move()
+			
+			};
+		}(this));
+		}
+		
+	
 	Fire() {
-		var bullet = new Bullet(20, 20 , "https://i.ibb.co/8zTJrZC/bullet.png")
+		if(imageChoiceBullet == null){
+		var bullet = new Bullet(20, 20, "https://i.ibb.co/8zTJrZC/bullet.png", this.name)
 		Bullets.push(bullet);
-		Bullets[0].makeBullet()
+		}
+		else{
+			var bullet = new Bullet(20, 20, imageChoiceBullet, this.name)
+			Bullets.push(bullet);
+		}
+		Bullets[0].makeBullet(this)
+		
 	}
 }
-class Bullet{
+class Bullet {
 	width;
 	height;
 	img;
-	constructor(width, height, img){
+	origin;
+	constructor(width, height, img, origin) {
 		this.width = width;
 		this.height = height;
 		this.img = img;
-		
+
 	}
-	makeBullet() {
+	makeBullet(plane) {
 		var trany = 0;
-		var saved = saved_moves
+		var saved = Planes.find(o => o.name === plane.name).saved_moves
+		
 		var i = 5;
-		const audio = new Audio("https://sndup.net/xtw5/d");
-		audio.volume = 0.9;
-		audio.play();
+		var planeId = plane.name.substring(5, 6)
 		var bullet = document.createElement("img")
 		bullet.src = this.img;
 		bullet.style.position = "absolute";
 		bullet.style.width = this.width + "px";
 		bullet.style.height = this.height + "px";
-		bullet.setAttribute("class", "bullet")
+		bullet.setAttribute("class", "bullet"+planeId)
 		bullet.style.zIndex = "0"
-		bullet.style.top = parseInt(document.getElementById("plane1").style.top) +50 +"px";
-		bullet.style.left = parseInt(document.getElementById("plane1").style.left) + 40+"px"
-		bullet.style.transform = saved_moves;
+		bullet.style.top = parseInt(document.getElementById("plane1").style.top)  + "%";
+		bullet.style.left = parseInt(document.getElementById("plane1").style.left)  + "%"
+		bullet.style.transform = saved;
 		document.getElementById("container").append(bullet)
 		var inter = setInterval(function() {
 			trany -= 7;
 			bullet.style.transform = saved + 'translateY(' + trany + 'vmin)';
-			var bullets = document.getElementsByClassName("bullet")
+			var bullets = document.getElementsByClassName("bullet"+planeId)
 			for (var i = 0; i < bullets.length; i++) {
 				const bounding = bullets[i].getBoundingClientRect();
 
-				if (bounding.top < 0 || bounding.left < 0 || bounding.bottom > (window.innerHeight || document.documentElement.clientHeight) || bounding.right > (window.innerWidth || document.documentElement.clientWidth)) {
+				if (bounding.top < 0 || bounding.left < 0 || bounding.bottom > maxHeight || bounding.right > maxWidth) {
 					clearInterval(inter)
 					document.getElementById("container").removeChild(bullets[i])
 					trany = 0;
 				}
 			}
 		}, 40)
+		
 	}
 }
+// import { addMessageHandler, removeMessageHandler } from 'https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js'
+
+var stompClient = null;
+var Ids = [];
+function connect() {
+    var socket = new SockJS('http://192.168.18.63:8080/websocket', null, {
+    	 sessionId: () => {
+    		 if(localStorage.getItem("client2") != null){
+    			 localStorage.removeItem("client1")
+    		    	localStorage.removeItem("client2")
+    		 }
+    		    // (2) Check if a session ID already exhists
+    		    let sessionId = localStorage.getItem("sockjsSessionId");
+
+    		    if(sessionId === null || sessionId === undefined) {
+				
+    		      // (3) If Session ID does not exist, create a random ID.
+    		      sessionId = (Math.random() + 1).toString(36).substring(7);
+    		      localStorage.setItem("sockjsSessionId", sessionId);
+    		    }
+    		    if(localStorage.getItem("client1") == null){
+    		    	 localStorage.setItem("client1", sessionId)
+    		    	 client1 = localStorage.getItem("client1")
+    		    	 console.log("Player 1")
+    		    	 client2 = localStorage.getItem("client2")
+    		    }
+  			else{
+    		    	localStorage.setItem("client2", sessionId)
+   		    	 client2 = localStorage.getItem("client2")
+   		    	 console.log("Player 2")
+   		    	 client1 = localStorage.getItem("client1")
+    		    }
+    		    id = sessionId;
+    		    maxHeight = (window.innerHeight || document.documentElement.clientHeight);
+    		    maxWidth = (window.innerWidth || document.documentElement.clientWidth);
+    		    
+    		    console.log("height: "+maxHeight+" width: "+maxWidth)
+    		    // (4) Pass session id to SockJS Server
+    		    return sessionId;
+    		  }
+    });
+    document.getElementById("fps").style.display = "block";
+    stompClient = Stomp.over(socket);
+    stompClient.debug = null;
+    stompClient.connect({}, function (frame) {
+        setConnected("none");
+        //plane1 move
+        stompClient.subscribe('/plane/coords/1', function (message){
+	var coords = JSON.parse(message.body)
+	if(id === client2){
+	if(coords.y != null && coords.x != null){
+	document.getElementById("plane1").style.top = coords.y +"%"
+	document.getElementById("plane1").style.left = coords.x +"%"
+	
+	}
+	document.getElementById("plane1").style.transform += coords.transform
+// 	Planes.find(o => o.name === "plane1").saved_moves += coords.transform;
+	}
+        });
+        //plane2 move
+         stompClient.subscribe('/plane/coords/2', function (message){
+        	 var coords = JSON.parse(message.body)
+        		if(id === client1){
+        		if(coords.y != null && coords.x != null){
+        		document.getElementById("plane2").style.top = coords.y +"%"
+        		document.getElementById("plane2").style.left = coords.x +"%"
+        		
+        		}
+        		document.getElementById("plane2").style.transform += coords.transform
+//        	 	Planes.find(o => o.name === "plane1").saved_moves += coords.transform;
+        		}
+        });
+        //plane1 shoot
+        stompClient.subscribe('/plane/shoot1', function(message){
+        	
+        		if(id === client2){
+        			Planes.find(o => o.name === "plane1").Fire()
+        		}
+        	
+        })
+        //plane2 shoot
+         stompClient.subscribe('/plane/shoot2', function(message){
+        	
+        		if(id === client1){
+        			Planes.find(o => o.name === "plane2").Fire()
+        		}
+        	
+        })
+        //plane1 boost
+        stompClient.subscribe('/plane/boost1', function(waarde){
+        	var value = waarde.body
+        	if(id===client2){
+        	if(value === "true"){
+        		document.getElementById("plane1P").style.width = 90 + "%";
+        		document.getElementById("plane1P").style.height = 70 + "%";
+        		document.getElementById("plane1F").style.width = 90 + "%";
+        		document.getElementById("plane1F").style.height = 100 + "%";
+        		document.getElementById("plane1F").src = "https://i.ibb.co/xj6XdgW/flames3.gif";
+        	}
+        	if(value === "false"){
+        		document.getElementById("plane1P").style.height = 70 + "%";
+        		document.getElementById("plane1F").src = Planes.find(o => o.name === "plane1").imgFlames;
+        	}
+        	}
+        	})
+        	//plane2 boost
+        	stompClient.subscribe('/plane/boost2', function(waarde){
+        	var value = waarde.body
+        	if(id===client1){
+        	if(value === "true"){
+        		document.getElementById("plane2P").style.width = 90 + "%";
+        		document.getElementById("plane2P").style.height = 70 + "%";
+        		document.getElementById("plane2F").style.width = 90 + "%";
+        		document.getElementById("plane2F").style.height = 100 + "%";
+        		document.getElementById("plane2F").src = "https://i.ibb.co/xj6XdgW/flames3.gif";
+        	}
+        	if(value === "false"){
+        		document.getElementById("plane2P").style.height = 70 + "%";
+        		document.getElementById("plane2F").src = Planes.find(o => o.name === "plane2").imgFlames;
+        	}
+        	}
+        	})
+    });
+}
+
+function setConnected(connected) {
+	   document.getElementsByClassName("form-inline")[0].style.display = connected
+
+		document.getElementById("board").style.display = "block";
+	   document.getElementById("container").style.display = "block";
+	   document.body.style.backgroundImage = "url('https://s3.gaming-cdn.com/images/products/7676/screenshot/spel-steam-agos-a-game-of-space-wallpaper-3.jpg')";
+	   document.body.style.backgroundSize = "contain";
+	   makePlane();
+		update()
+		const slider = document.getElementById("boost")
+		const min = slider.min
+		const max = slider.max
+		const value = slider.value
+
+		slider.style.background = `linear-gradient(to right, lime 0%, lime ${(value-min)/(max-min)*100}%, black ${(value-min)/(max-min)*100}%, black 100%)`
+
+		slider.oninput = function() {
+			this.style.background = `linear-gradient(to right, lime 0%, lime ${(this.value-this.min)/(this.max-this.min)*100}%, black ${(this.value-this.min)/(this.max-this.min)*100}%, black 100%)`
+		};
+	}
 window.onkeyup = function(e) {
 	var kc = e.keyCode;
-	if(kc === 32){ Keys.space = true;}
-    else if(kc === 13){ Keys.enter = false;}
-    else if ( kc === 39 ){ Keys.right = false;}
-    else if ( kc === 38 ){ Keys.up = false;}
-    else if ( kc === 37 ){ Keys.left = false;}
+	e.preventDefault();
+	if (kc === 16) {
+		Keys.shift = false;
+	}
+	if (kc === 17) {
+		Keys.ctrl = false;
+	}
+	if (kc === 39) {
+		Keys.right = false;
+	}
+	if (kc === 38) {
+		Keys.up = false;
+	}
+	if (kc === 37) {
+		Keys.left = false;
+	}
 
 };
 
-window.onload = function() {
+function load() {
 	makePlane();
 	update()
+	if(id === client1){
 	const slider = document.getElementById("boost")
 	const min = slider.min
 	const max = slider.max
@@ -200,107 +521,99 @@ window.onload = function() {
 	slider.style.background = `linear-gradient(to right, lime 0%, lime ${(value-min)/(max-min)*100}%, black ${(value-min)/(max-min)*100}%, black 100%)`
 
 	slider.oninput = function() {
-	  this.style.background = `linear-gradient(to right, lime 0%, lime ${(this.value-this.min)/(this.max-this.min)*100}%, black ${(this.value-this.min)/(this.max-this.min)*100}%, black 100%)`
+		this.style.background = `linear-gradient(to right, lime 0%, lime ${(this.value-this.min)/(this.max-this.min)*100}%, black ${(this.value-this.min)/(this.max-this.min)*100}%, black 100%)`
 	};
+	}
 	
 }
 
 function makePlane() {
-	plane = new Plane(100, 100, "https://i.pinimg.com/originals/3b/03/94/3b0394153492f7a2e31e80bb9e4c4fb5.gif" , "plane1")
+	if(imageChoice == null){
+	plane = new Plane(100, 100, "https://i.ibb.co/y8tqg50/Schip.png", "https://i.ibb.co/2dbntvm/flames.gif", "plane1", 50, 20)
 	Planes.push(plane)
-	Planes[0].makePlane();
+	Planes.find(o => o.name === "plane1").makePlane();
+	plane = new Plane(100, 100, "https://i.ibb.co/y8tqg50/Schip.png", "https://i.ibb.co/2dbntvm/flames.gif", "plane2", 50, 80)
+	Planes.push(plane)
+	Planes.find(o => o.name === "plane2").makePlane();
+	}
+	else{
+		plane = new Plane(100, 100, imageChoice, "https://i.ibb.co/2dbntvm/flames.gif", "plane1", 50, 20)
+		Planes.push(plane)
+		Planes.find(o => o.name === "plane1").makePlane();
+		plane = new Plane(100, 100, imageChoice, "https://i.ibb.co/2dbntvm/flames.gif", "plane2", 50, 80)
+		Planes.push(plane)
+		Planes.find(o => o.name === "plane2").makePlane();
+	}
+	
+
+		
+			
+	
 }
 
 function update() {
+	if(id === client1){
 	requestAnimationFrame(function() {
-		Planes[0].Move()
+		Planes.find(o => o.name === "plane1").Move()
+		
 	});
 }
+	if(id === client2){
+		requestAnimationFrame(function() {
+			Planes.find(o => o.name === "plane2").Move()
+			
+		});
+	}
+}
+function settings() {
+	document.getElementById("menu").style.display = "none";
+	document.getElementById("setting").style.display = "block";
+	document.getElementById("back").style.display = "block";
+		document.getElementById("setting").style.display = "flex";
+		document.getElementById("setting1").style.display = "block";
+		document.getElementById("setting1").style.display = "flex";
+}
+function chooseImage(event) {
+	imageChoice = event.src;
+}
+function chooseImageBullet(event) {
+	imageChoiceBullet = event.src;
+}
 function fpsMeter() {
-    let prevTime = Date.now(),
-        frames = 0;
+	let prevTime = Date.now(),
+		frames = 0;
 
-    requestAnimationFrame(function loop() {
-      const time = Date.now();
-      frames++;
-      if (time > prevTime + 1000) {
-        let fps = Math.round( ( frames * 1000 ) / ( time - prevTime ) );
-        prevTime = time;
-        frames = 0;
-        document.getElementById("text").innerHTML = "";
-        document.getElementById("text").innerHTML = "FPS: "+fps;
-      }
+	requestAnimationFrame(function loop() {
+		const time = Date.now();
+		frames++;
+		if (time > prevTime + 1000) {
+			let fps = Math.round((frames * 1000) / (time - prevTime));
+			prevTime = time;
+			frames = 0;
+			document.getElementById("text").innerHTML = "";
+			document.getElementById("text").innerHTML = "FPS: " + fps;
+		}
 
-      requestAnimationFrame(loop);
+		requestAnimationFrame(loop);
+	});
+}
+fpsMeter();
+$(function () {
+    $("form").on('submit', function (e) {
+        e.preventDefault();
     });
-}
-  
-  fpsMeter();
-
-
-function boostDown() {
-	
-	var boost = document.getElementById("boost")
-	if(Keys.enter){
-      if (!executed) {
-    	  clearInterval(boostInter)
-			executed = true;
-			audioBoost.volume = 0.9;
-			audioBoost.play();
-			speed = 10.0;
-		boostInterval = setInterval(function() {
-			if(boostDur <= 0){
-				clearInterval(boostInterval)
-				boostUp();
-				Keys.enter = false;
-				
-			}
-			else{
-			boostDur = boostDur - 10;
-			
-			boost.value = boostDur
-			boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
-			}
-		}, 1000)
-// 		}
-// 		else{
-// 			console.log("test")
-// 			boostUp()
-// 			clearInterval(boostInterval);
-			
-			
-// 		}
-		}
-	
-	}
-      
-	
-      }
-	
-
-function boostUp(){
-	if(executed){
-		executed = false;
-	var boost = document.getElementById("boost")
-// 	clearInterval(boostInterval);
-	speed = 6.0;
-	audioBoost.pause();
-	audioBoost.currentTime = 0;
-	
-		
-	boostInter = setInterval(function() {
-		if(boostDur >= 60){
-			boostDur = 60;
-			clearInterval(boostInter)
-		}
-		boostDur = boostDur + 5;
-		boost.value = boostDur
-		boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
-	}, 1000)
-	
-	}
-}
-
+    $( "#start" ).click(function() { connect(); });
+    $("#settings").click(function() {
+    	settings();
+    });
+    $("#back").click(function() {
+    	document.getElementById("menu").style.display = "block";
+    	document.getElementById("menu").style.display = "flex";
+	document.getElementById("setting").style.display = "none";
+	document.getElementById("setting1").style.display = "none";
+	document.getElementById("back").style.display = "none";
+    });
+});
 </script>
 <style>
 html, body {
@@ -310,6 +623,9 @@ html, body {
 	width: 100%; /* take full browser width */
 	height: 100%; /* take full browser height*/
 	overflow-x: hidden;
+	background-image:
+		url('https://media.istockphoto.com/vectors/cartoon-moon-surface-landscape-background-vector-id1144328145?k=20&m=1144328145&s=170667a&w=0&h=vM_r94ZZATBeDCYbEPGzs9c9VF3HHBZXVYMezQo0Ick=');
+	background-size: contain;
 }
 
 #plane1 {
@@ -317,12 +633,9 @@ html, body {
 	touch-action: none;
 }
 
-body {
-	background-image:
-		url('https://upload.wikimedia.org/wikipedia/commons/e/e4/StarfieldSimulation.gif');
-	background-size: cover;
-}
+/* body { */
 
+/* } */
 body::-webkit-scrollbar {
 	display: none;
 }
@@ -337,9 +650,15 @@ body::-webkit-scrollbar {
 
 #container {
 	position: relative;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
+	width:100%;
+	height:100%;
+/* 	width: 1536px; */
+/* 	height: 714px; */
+ 	overflow: hidden; 
+/* 	background-image: */
+/* 		url('https://s3.gaming-cdn.com/images/products/7676/screenshot/spel-steam-agos-a-game-of-space-wallpaper-3.jpg'); */
+/* 	background-size: contain; */
+	display: none;
 }
 
 #board {
@@ -370,39 +689,252 @@ body::-webkit-scrollbar {
 	border: white solid 0.9px;
 }
 
+#menu {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	padding: 10px;
+	width: 300px;
+	height: 600px;
+	text-align: 'center';
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+}
+
+#start, #settings {
+	border-radius: 8px;
+	font-size: 24px;
+	position: relative;
+	margin: 0 auto;
+	display: table-cell; vertical-align : middle;
+	width: 150px;
+	height: 50px;
+	background-color: #1B37FF;
+	vertical-align: middle;
+}
+
+#back {
+	border-radius: 8px;
+	font-size: 24px;
+	position: relative;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 150px;
+	display: none;
+	height: 50px;
+	top: 500px;
+	background-color: #1B37FF;
+}
+
+#image {
+	/* border-radius: 8px; */
+	font-size: 24px;
+	position: relative;
+	display: table;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 300px;
+	height: 300px;
+}
+
+#setting {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	padding: 10px;
+	width: 300px;
+	height: 600px;
+	display: none;
+	flex-direction: row;
+	justify-content: center;
+}
+
+#setting1 {
+	position: absolute;
+	left: 50%;
+	top: 80%;
+	transform: translate(-50%, -50%);
+	padding: 10px;
+	width: 300px;
+	height: 600px;
+	display: none;
+	flex-direction: row;
+	justify-content: center;
+}
+
+.images {
+	font-size: 24px;
+	position: relative;
+	margin: 0 auto;
+	width: 180px;
+	opacity: 0.5;
+	height: 150px;
+}
+
+.images:active {
+	opacity: 0.9;
+}
+
+figure {
+	text-align: center;
+	font-family: Georgia, serif;
+	font-size: 25px;
+	letter-spacing: 2px;
+	word-spacing: 2px;
+	color: white;
+	font-weight: 700;
+	text-decoration: none solid rgb(68, 68, 68);
+	font-style: italic;
+	font-variant: small-caps;
+	text-transform: uppercase;
+}
+
 input[type='range']::-webkit-slider-thumb {
 	display: none;
 }
+
+@media screen and (max-width: 992px) {
+	.images {
+		font-size: 24px;
+		position: relative;
+		margin: 0 auto;
+		width: 90px;
+		opacity: 0.5;
+		height: 75px;
+	}
+	figure {
+		text-align: center;
+		font-family: Georgia, serif;
+		font-size: 10px;
+		letter-spacing: 2px;
+		word-spacing: 2px;
+		color: white;
+		font-weight: 700;
+		text-decoration: none solid rgb(68, 68, 68);
+		font-style: italic;
+		font-variant: small-caps;
+		text-transform: uppercase;
+	}
+}
+
+@media screen and (max-width: 992px) {
+	body, html {
+		background-color: lightblue;
+	}
+}
 </style>
 </head>
-<body>
+<body id="body">
 
-
+	<form class="form-inline" style="color: white">
+		<div id="menu">
+			<img id="image" src="https://i.ibb.co/LN0KRGz/logo.png">
+			<button id="start" class="btn btn-default" type="submit">Start
+				Game</button>
+			<br>
+			<button id="settings" class="btn btn-default" type="submit">Settings</button>
+		</div>
+		<div id="setting">
+			<figure>
+				<img onclick="chooseImage(event.target)" class="images"
+					src="https://i.ibb.co/y8tqg50/Schip.png">
+				<figcaption>Blue</figcaption>
+			</figure>
+			<figure>
+				<img onclick="chooseImage(event.target)" class="images"
+					src="https://i.ibb.co/JnxCDT0/ship-Red.png">
+				<figcaption>Red</figcaption>
+			</figure>
+			<figure>
+				<img onclick="chooseImage(event.target)" class="images"
+					src="https://i.ibb.co/yQMSXTZ/ship-Greenj.png">
+				<figcaption>Green</figcaption>
+			</figure>
+			<figure>
+				<img onclick="chooseImage(event.target)" class="images"
+					src="https://i.ibb.co/LxGGvkq/ship-Orange.png">
+				<figcaption>Orange</figcaption>
+			</figure>
+			<figure>
+				<img onclick="chooseImage(event.target)" class="images"
+					src="https://i.ibb.co/DrKGZ4P/ship-Yellow.png">
+				<figcaption>Yellow</figcaption>
+			</figure>
+		</div>
+		<div id="setting1">
+			<figure>
+				<img onclick="chooseImageBullet(event.target)" class="images"
+					src="https://i.ibb.co/b261bvN/blast-Blue.png">
+				<figcaption>Blue</figcaption>
+			</figure>
+			<figure>
+				<img onclick="chooseImageBullet(event.target)" class="images"
+					src="https://i.ibb.co/8zTJrZC/bullet.png">
+				<figcaption>Red</figcaption>
+			</figure>
+			<figure>
+				<img onclick="chooseImageBullet(event.target)" class="images"
+					src="https://i.ibb.co/jkT4Xsb/blast-Green.png">
+				<figcaption>Green</figcaption>
+			</figure>
+			<figure>
+				<img onclick="chooseImageBullet(event.target)" class="images"
+					src="https://i.ibb.co/0hSdx34/blast-Orange.png">
+				<figcaption>Orange</figcaption>
+			</figure>
+			<figure>
+				<img onclick="chooseImageBullet(event.target)" class="images"
+					src="https://i.ibb.co/jTwKd2w/blast-Yellow.png">
+				<figcaption>Yellow</figcaption>
+			</figure>
+		</div>
+		<button id="back" class="btn btn-default" type="submit">Back</button>
+	</form>
+	<!-- 	ship -->
+	<!-- 	red https://i.ibb.co/JnxCDT0/ship-Red.png -->
+	<!-- green https://i.ibb.co/yQMSXTZ/ship-Greenj.png -->
+	<!-- orange https://i.ibb.co/LxGGvkq/ship-Orange.png -->
+	<!-- yellow https://i.ibb.co/DrKGZ4P/ship-Yellow.png -->
+	<!-- bullet -->
+	<!-- blue https://i.ibb.co/b261bvN/blast-Blue.png -->
+	<!-- green https://i.ibb.co/jkT4Xsb/blast-Green.png -->
+	<!-- orange https://i.ibb.co/0hSdx34/blast-Orange.png-->
+	<!-- yellow https://i.ibb.co/jTwKd2w/blast-Yellow.png -->
+	<!--             <div id="main" style="display:none"> -->
 	<div id="container"></div>
-	<div id="board">
+	<div id="board" style="display: none">
 		<h2 id="score">Score: 0</h2>
 		<!-- 		<h2 id="boost">Boost: Ready</h2> -->
 		<input id="boost" type="range" min="0" value="60" max="60" />
 	</div>
-	<div id="fps">
+	<div style="display: none" id="fps">
 		<p id="text">
 	</div>
+	<!-- 	</div> -->
 	<script>
-	var Keys = {
+	var  Keys = {
 		    up: false,
 		    left: false,
 		    right: false,
-		    enter: false,
-		    space:false
+		    ctrl: false,
+		    shift:false
 		  }
 	
 		  window.onkeydown = function( e ) {
 		    var kc = e.keyCode;
-		    if(kc === 32){ Keys.space = false;}
-		    else if(kc === 13){ Keys.enter = true;}
-		    else if ( kc === 39 ){ Keys.right = true;}
-		    else if ( kc === 38 ){ Keys.up = true;}
-		    else if ( kc === 37 ){ Keys.left = true;}
+		    e.preventDefault();
+		    if(kc === 16){ Keys.shift = true;}
+		    if(kc === 17){ Keys.ctrl = true;}
+		    if ( kc === 39 ){ Keys.right = true;}
+		    if ( kc === 38 ){ Keys.up = true;}
+		    if ( kc === 37 ){ Keys.left = true;}
 		  };
 		  
 		  

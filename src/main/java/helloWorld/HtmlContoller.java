@@ -15,7 +15,6 @@ public class HtmlContoller {
 	
 	@GetMapping("/start")
 	String ShowPage() {
-		System.out.println("test");
 		return "Play";
 	}
 	@GetMapping("/start1")
