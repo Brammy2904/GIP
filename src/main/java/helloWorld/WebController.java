@@ -87,4 +87,10 @@ public class WebController {
 	    return test;
 	   
 	}
+	@MessageMapping("/plane/won")
+	@SendTo("/plane/winner")
+	public String winner(@RequestBody String test){
+	    return test;
+	   
+	}
 }

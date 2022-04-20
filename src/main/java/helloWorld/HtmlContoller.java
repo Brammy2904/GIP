@@ -25,5 +25,9 @@ public class HtmlContoller {
 	String test() {
 		return "teste";
 	}
+	@GetMapping("/End")
+	String rickroll() {
+		return "Rickroll";
+	}
 	
 }

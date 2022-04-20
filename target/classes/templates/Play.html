@@ -1,1116 +1,156 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-<title>1v1 Space Shooter</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
-<script
-	src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script
-	src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-<script
-	src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-<script>
-var score = 100;
-var audioEx = new Audio('https://sndup.net/d5pv/d')
-let keys = {};
-var imageChoice = null;
-var imageChoiceBullet = null;
-var Planes = [];
-var Bullets = [];
-var id;
-var maxHeight;
-var maxWidth;
-var player;
-var imgBull;
-
-class Plane {
-	width;
-	height;
-	imgPlane;
-	imgFlames;
-	name;
-	boostDur = 60;
-	boostInter;
-	boostInterval;
-	saved_moves = "";
-	speed = 6.0;
-	planeTop;
-	planeLeft;
-	audioShoot = new Audio("https://sndup.net/dtzz/d");
-	audioBoost = new Audio("https://sndup.net/sqkp/d");
-	soundShoot = false;
-	executed = false;
-	constructor(width, height, imgPlane, imgFlames, name, planeTop, planeLeft) {
-		this.width = width;
-		this.height = height;
-		this.imgPlane = imgPlane;
-		this.imgFlames = imgFlames;
-		this.name = name;
-		this.planeTop = planeTop;
-		this.planeLeft = planeLeft;
-	}
-	makePlane() {
-		var div = document.createElement("div")
-		div.style.position = "relative";
-		div.style.width = 100 + "px";
-		div.style.height = 100 + "px";
-		div.style.top = this.planeTop + "%"
-		div.style.left = this.planeLeft + "%";
-		div.setAttribute("id", this.name)
-		div.style.overflow = "hidden";
-		div.style.zIndex = "1"
-		div.style.transformOrigin = "center";
-		var plane = document.createElement("img")
-		plane.style.width = 90 + "%";
-		plane.style.height = 70 + "%";
-		plane.src = this.imgPlane
-		plane.setAttribute("id", this.name + "P")
-		plane.style.position = "absolute";
-		plane.style.zIndex = "2"
-		div.append(plane)
-		var flames = document.createElement("img")
-		flames.style.width = 90 + "%";
-		flames.style.height = 100 + "%";
-		flames.setAttribute("id", this.name + "F")
-		flames.src = this.imgFlames;
-		flames.style.position = "absolute";
-		flames.style.zIndex = "3"
-		div.append(flames)
-
-
-		document.getElementById("container").append(div)
-	}
-	boostDown() {
-		var plane = document.getElementById(this.name + "P")
-		var flames = document.getElementById(this.name + "F")
-		var boost = document.getElementById("boost")
-		if (!this.executed) {
-			clearInterval(this.boostInter)
-			this.executed = true;
-			if (!this.boostDur <= 0) {
-				this.speed = 10.0;
-				plane.style.width = 90 + "%";
-				plane.style.height = 70 + "%";
-				flames.style.width = 90 + "%";
-				flames.style.height = 100 + "%";
-				flames.src = "https://i.ibb.co/xj6XdgW/flames3.gif";
-
-				this.audioBoost.volume = 0.9;
-				this.audioBoost.play();
-				this.boostInterval = setInterval(function(plane) {
-					return function() {
-						if (plane.boostDur <= 0) {
-							clearInterval(plane.boostInterval)
-							Planes.find(o => o.name === plane.name).boostUp();
-							Keys.ctrl = false;
-						} else {
-							plane.boostDur = plane.boostDur - 2.50;
-
-							boost.value = plane.boostDur
-							boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
-						}
-					};
-				}(this), 250)
-			}
-
-		}
-	}
-	boostUp() {
-		if (this.executed) {
-			this.executed = false;
-			if (this.name === "plane1") {
-				stompClient.send("/app/plane/boost/1", {}, "false")
-			}
-			if (this.name === "plane2") {
-				stompClient.send("/app/plane/boost/2", {}, "false")
-			}
-			var boost = document.getElementById("boost")
-			var flames = document.getElementById(this.name + "F")
-			var plane = document.getElementById(this.name + "P")
-			this.speed = 6.0;
-
-			this.audioBoost.pause();
-
-			this.audioBoost.currentTime = 0;
-
-			plane.style.height = 70 + "%";
-			flames.src = this.imgFlames;
-
-
-			this.boostInter = setInterval(function(plane) {
-				return function() {
-					if (plane.boostDur >= 60) {
-						plane.boostDur = 60;
-						clearInterval(plane.boostInter)
-					}
-					plane.boostDur = plane.boostDur + 2.50;
-					boost.value = plane.boostDur
-					boost.style.background = `linear-gradient(to right, lime 0%, lime ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black ${(boost.value-boost.min)/(boost.max-boost.min)*100}%, black 100%)`
-				};
-			}(this), 500)
-
-
-		}
-	}
-	Move() {
-		var plane = document.getElementById(this.name)
-		var rect = plane.getBoundingClientRect();
-		this.saved_moves = document.getElementById(this.name).style.transform;
-		var move = "";
-		if (Keys.up) {
-			if (rect.top <= 0) {
-				plane.style.top = parseInt(plane.style.top) + 1 + "%"
-			}
-			if (rect.bottom >= maxHeight) {
-				plane.style.top = parseInt(plane.style.top) - 1 + "%"
-			}
-			if (rect.left <= 0) {
-				plane.style.left = parseInt(plane.style.left) + 1 + "%"
-			}
-			if (rect.right >= maxWidth) {
-				plane.style.left = parseInt(plane.style.left) - 1 + "%"
-			} else {
-				plane.style.transform += 'translateY( -' + Math.round(this.speed) / 10 + 'vh )';
-				move = move + ' translateY( -' + Math.round(this.speed) / 10 + 'vh )'
-
-			}
-		}
-		if (Keys.right) {
-			plane.style.transform += 'rotate( 3deg )';
-			move = move + ' rotate( 3deg )'
-		} else if (Keys.left) {
-			plane.style.transform += 'rotate( -3deg )';
-			move = move + ' rotate( -3deg )'
-		}
-		if (Keys.ctrl) {
-			if (!Planes.find(o => o.name === this.name).executed) {
-				Planes.find(o => o.name === this.name).boostDown()
-				if (this.name === "plane1") {
-					var array = {
-						"waarde": "true",
-						"id": id
-					}
-					stompClient.send("/app/plane/boost/1", {}, JSON.stringify(array))
-				}
-				if (this.name === "plane2") {
-					var array = {
-						"waarde": "true",
-						"id": id
-					}
-					stompClient.send("/app/plane/boost/2", {}, JSON.stringify(array))
-				}
-			}
-		}
-		if (!Keys.ctrl) {
-			if (Planes.find(o => o.name === this.name).executed) {
-				clearInterval(Planes.find(o => o.name === this.name).boostInterval)
-				Planes.find(o => o.name === this.name).boostUp()
-				if (this.name === "plane1") {
-					var array = {
-						"waarde": "false",
-						"id": id
-					}
-					stompClient.send("/app/plane/boost/1", {}, JSON.stringify(array))
-				}
-				if (this.name === "plane2") {
-					var array = {
-						"waarde": "false",
-						"id": id
-					}
-					stompClient.send("/app/plane/boost/2", {}, JSON.stringify(array))
-				}
-			}
-		}
-		if (Keys.shift) {
-			if (this.name === "plane1") {
-				Planes.find(o => o.name === this.name).Fire(player);
-				var array = {
-					"waarde": "true",
-					"id": id
-				}
-				stompClient.send("/app/plane/shoot/1", {}, JSON.stringify(array))
-				if (this.soundShoot) {
-					this.audioShoot.pause();
-					this.audioShoot.currentTime = 0;
-					this.soundShoot = false;
-				}
-
-				this.audioShoot.volume = 0.9;
-				this.audioShoot.play();
-				this.soundShoot = true;
-
-				Keys.shift = false;
-			}
-			if (this.name === "plane2") {
-				Planes.find(o => o.name === this.name).Fire(player);
-				var array = {
-					"waarde": "true",
-					"id": id
-				}
-				stompClient.send("/app/plane/shoot/2", {}, JSON.stringify(array))
-				if (this.soundShoot) {
-					this.audioShoot.pause();
-					this.audioShoot.currentTime = 0;
-					this.soundShoot = false;
-				}
-
-				this.audioShoot.volume = 0.9;
-				this.audioShoot.play();
-				this.soundShoot = true;
-
-				Keys.shift = false;
-			}
-
-		}
-
-		var x = parseInt(document.getElementById(this.name).style.left);
-		var y = parseInt(document.getElementById(this.name).style.top);
-		this.saved_moves += move;
-
-		if (move != "") {
-			if (this.name === "plane1") {
-				var coords = {
-					"x": x,
-					"y": y,
-					"transform": move,
-					"id": id
-				}
-				stompClient.send("/app/plane/move1", {}, JSON.stringify(coords));
-			}
-			if (this.name === "plane2") {
-				var coords = {
-					"x": x,
-					"y": y,
-					"transform": move,
-					"id": id
-				}
-				stompClient.send("/app/plane/move2", {}, JSON.stringify(coords));
-			}
-		}
-		var animation = requestAnimationFrame(function(plane) {
-			return function() {
-				Planes.find(o => o.name === plane.name).Move()
-
-			};
-		}(this));
-	}
-
-
-
-	Fire(speler) {
-		if (imageChoiceBullet == null) {
-			var bullet = new Bullet(20, 20, "https://i.ibb.co/8zTJrZC/bullet.png", this.name)
-			Bullets.push(bullet);
-		} else {
-			var bullet = new Bullet(20, 20, imageChoiceBullet, this.name)
-			Bullets.push(bullet);
-		}
-		if (player === speler) {
-			Bullets.find(o => o.origin === this.name).makeBullet(this, speler)
-		} else {
-			Bullets.find(o => o.origin === this.name).makeBullet(this, speler)
-		}
-
-	}
-}
-class Bullet {
-	width;
-	height;
-	img;
-	origin;
-	backupImg = "https://i.ibb.co/8zTJrZC/bullet.png";
-	constructor(width, height, img, origin) {
-		this.width = width;
-		this.height = height;
-		this.img = img;
-		this.origin = origin;
-
-	}
-	makeBullet(plane, speler) {
-		var trany = 0;
-		var saved = Planes.find(o => o.name === plane.name).saved_moves;
-		var i = 5;
-		var planeId = plane.name.substring(5, 6)
-		var bullet = document.createElement("img")
-		if (planeId === player.split("r", 2)[1]) {
-			bullet.src = this.img;
-		}
-		if (planeId != player.split("r", 2)[1]) {
-			if (imgBull == null) {
-				bullet.src = this.backupImg;
-			}
-			if (imgBull != null) {
-				bullet.src = imgBull;
-			}
-		}
-		bullet.style.position = "absolute";
-		bullet.style.width = this.width + "px";
-		bullet.style.height = this.height + "px";
-		bullet.setAttribute("class", "bullet" + planeId)
-		bullet.setAttribute("id", "bullet" + planeId)
-		bullet.style.zIndex = "0"
-		if (plane.name === "plane1") {
-			bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 4 + "%";
-		} else {
-			bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 20 + "%";
-		}
-		bullet.style.left = parseInt(document.getElementById(plane.name).style.left) + 4 + "%"
-		bullet.style.transform = saved;
-		document.getElementById("container").append(bullet)
-		var inter = setInterval(function(plane) {
-			return function() {
-				trany -= 7;
-				bullet.style.transform = saved + 'translateY(' + trany + 'vmin)';
-				var bullets = document.getElementsByClassName("bullet" + planeId)
-				for (var i = 0; i < bullets.length; i++) {
-					const bounding = bullets[i].getBoundingClientRect();
-					if (plane.name === "plane1") {
-						var vliegtuig = document.getElementById("plane2").getBoundingClientRect();
-						var rakenPlane = checkCollision(bounding, vliegtuig);
-						if (rakenPlane) {
-							if (player === "player2") {
-								if (score === 0) {
-									score = 0;
-								} else {
-									score--;
-								}
-								document.getElementById("score").innerHTML = "Levens: " + score;
-							}
-							document.getElementById("container").removeChild(bullets[i])
-							explosion(speler)
-							clearInterval(inter)
-							trany = 0;
-						}
-					}
-					if (plane.name === "plane2") {
-						var vliegtuig = document.getElementById("plane1").getBoundingClientRect();
-						var rakenPlane = checkCollision(bounding, vliegtuig);
-						if (rakenPlane) {
-							if (player === "player1") {
-								if (score === 0) {
-									score = 0;
-								} else {
-									score--;
-								}
-								document.getElementById("score").innerHTML = "Levens: " + score;
-							}
-							
-							document.getElementById("container").removeChild(bullets[i])
-							explosion(speler)
-							clearInterval(inter)
-							trany = 0;
-						}
-					}
-
-					if (bounding.top < 0 || bounding.left < 0 || bounding.bottom > maxHeight || bounding.right > maxWidth) {
-						clearInterval(inter)
-						document.getElementById("container").removeChild(bullets[i])
-						trany = 0;
-					}
-				}
-			}
-		}(plane), 40)
-
-	}
-}
-
-var stompClient = null;
-var Ids = [];
-
-function connect() {
-	var socket = new SockJS('http://192.168.0.101:8080/websocket', [], {
-		sessionId: () => {
-			var connid = test()
-			sessionId = connid;
-			maxHeight = (window.innerHeight || document.documentElement.clientHeight);
-			maxWidth = (window.innerWidth || document.documentElement.clientWidth);
-			return sessionId
-		}
-	});
-
-	document.getElementById("fps").style.display = "block";
-	stompClient = Stomp.over(socket);
-	stompClient.debug = null;
-	stompClient.connect('', '', function(frame) {
-
-		var sesid = socket._transport.url.split("/", 6)[5]
-		id = sesid;
-		stompClient.send('/app/plane/name', {}, id)
-		stompClient.subscribe('/plane/name/test', function(message) {
-			var value = message.body;
-			if (player == null) {
-				if (value === "1") {
-					player = "player1";
-					console.log("Player1")
-
-				} else {
-					player = "player2";
-					console.log("Player2")
-				}
-				update()
-				sendImage();
-			}
-
-		})
-
-		stompClient.subscribe('/plane/image/settings', function(message) {
-			var array = JSON.parse(message.body);
-			for (var i = 0; i < array.length; i++) {
-				if (array[i].player != player) {
-					var speler = array[i].player.split("r", 2)[1]
-					if (array[i].img != null) {
-						document.getElementById("plane" + speler + "P").src = array[i].img;
-					}
-					if (array[i].imgBul != null) {
-						imgBull = array[i].imgBul;
-					}
-				} else {
-					var speler = array[i].player.split("r", 2)[1]
-					if (array[i].img != null) {
-						document.getElementById("plane" + speler + "P").src = array[i].img;
-					}
-					if (array[i].imgBul != null) {
-						// 					 document.getElementById("bullet"+speler).src = array[i].imgBul; 
-
-					}
-				}
-			}
-		})
-		//plane1 move
-		stompClient.subscribe('/plane/coords', function(message) {
-			var coords = JSON.parse(message.body)
-			if (coords.id != id) {
-				client2 = coords.id
-				if (coords.y != null && coords.x != null) {
-					document.getElementById("plane1").style.top = coords.y + "%"
-					document.getElementById("plane1").style.left = coords.x + "%"
-
-				}
-
-				document.getElementById("plane1").style.transform += coords.transform
-				Planes.find(o => o.name === "plane1").saved_moves += coords.transform;
-			}
-		});
-		//plane2 move
-		stompClient.subscribe('/plane/coordsing', function(message) {
-			var coords = JSON.parse(message.body)
-
-			if (coords.id != id) {
-				client2 = coords.id
-				if (coords.y != null && coords.x != null) {
-					document.getElementById("plane2").style.top = coords.y + "%"
-					document.getElementById("plane2").style.left = coords.x + "%"
-
-				}
-
-				document.getElementById("plane2").style.transform += coords.transform
-				Planes.find(o => o.name === "plane2").saved_moves += coords.transform;
-			}
-		});
-		//plane1 shoot
-		stompClient.subscribe('/plane/shoot', function(message) {
-			var array = JSON.parse(message.body)
-			if (array.id != id) {
-				Planes.find(o => o.name === "plane1").Fire(player)
-			}
-
-		})
-		//plane2 shoot
-		stompClient.subscribe('/plane/shooting', function(message) {
-			var array = JSON.parse(message.body)
-			if (array.id != id) {
-				Planes.find(o => o.name === "plane2").Fire(player)
-			}
-
-		})
-		//plane1 boost
-		stompClient.subscribe('/plane/boost', function(message) {
-			var array = JSON.parse(message.body)
-			if (array.id != id) {
-				if (array.waarde === "true") {
-					document.getElementById("plane1P").style.width = 90 + "%";
-					document.getElementById("plane1P").style.height = 70 + "%";
-					document.getElementById("plane1F").style.width = 90 + "%";
-					document.getElementById("plane1F").style.height = 100 + "%";
-					document.getElementById("plane1F").src = "https://i.ibb.co/xj6XdgW/flames3.gif";
-				}
-				if (array.waarde === "false") {
-					document.getElementById("plane1P").style.height = 70 + "%";
-					document.getElementById("plane1F").src = Planes.find(o => o.name === "plane1").imgFlames;
-				}
-			}
-		})
-		//plane2 boost
-		stompClient.subscribe('/plane/boosting', function(message) {
-			var array = JSON.parse(message.body)
-			if (array.id != id) {
-				if (array.waarde === "true") {
-					document.getElementById("plane2P").style.width = 90 + "%";
-					document.getElementById("plane2P").style.height = 70 + "%";
-					document.getElementById("plane2F").style.width = 90 + "%";
-					document.getElementById("plane2F").style.height = 100 + "%";
-					document.getElementById("plane2F").src = "https://i.ibb.co/xj6XdgW/flames3.gif";
-				}
-				if (array.waarde === "false") {
-					document.getElementById("plane2P").style.height = 70 + "%";
-					document.getElementById("plane2F").src = Planes.find(o => o.name === "plane2").imgFlames;
-				}
-			}
-		})
-	});
-	setConnected("none");
-}
-
-function explosion(speler) {
-	// 	var img = document.createElement("img")
-	// 	img.src = "https://i.ibb.co/pLp7pv6/explosie.gif"
-	// 	img.style.width = 64 + "px";
-	// 	img.style.height = 52 + "px";
-	// 	img.style.position = "fixed";
-	// 	img.style.top = Planes.find(o => o.name === "plane"+plane).planeTop +10 + "%";
-	// 	img.style.left = Planes.find(o => o.name === "plane"+plane).planeLeft + "%";
-	// 	img.transform = Planes.find(o => o.name === "plane"+plane).saved_moves;
-	// 	document.getElementById("body").appendChild(img);
-	// 	setTimeout(function() {
-	// 		document.getElementById("body").removeChild(img);
-	// 	}, 1000)
-	if(speler != "player2"){
-	audioEx.currentTime = 0;
-	audioEx.volume = 0.9;
-	audioEx.play();
-	}
-}
-
-function sendImage() {
-	if (imageChoice != null && imageChoiceBullet == null) {
-		var array = {
-			"img": imageChoice,
-			"imgBul": null,
-			"player": player
-		}
-		stompClient.send('/app/plane/image', {}, JSON.stringify(array))
-	} else if (imageChoice != null && imageChoiceBullet != null) {
-		var array = {
-			"img": imageChoice,
-			"imgBul": imageChoiceBullet,
-			"player": player
-		}
-		stompClient.send('/app/plane/image', {}, JSON.stringify(array))
-	} else if (imageChoice == null && imageChoiceBullet != null) {
-		var array = {
-			"img": null,
-			"imgBul": imageChoiceBullet,
-			"player": player
-		}
-		stompClient.send('/app/plane/image', {}, JSON.stringify(array))
-	}
-}
-
-function test() {
-	const randcharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-	const randchars = (function(R, M) {
-		var L = R.length,
-			r = M.random,
-			f = M.floor;
-		return function(len) {
-			var i, s = "";
-			for (i = 0; i < len; i++) s += R[f(r() * L)];
-			return s;
-		};
-	})(randcharset.split(''), Math);
-	return randchars(7);
-}
-
-function setConnected(connected) {
-	document.getElementsByClassName("form-inline")[0].style.display = connected
-	document.getElementById("board").style.display = "block";
-	document.getElementById("container").style.display = "block";
-	document.body.style.backgroundImage = "url('https://s3.gaming-cdn.com/images/products/7676/screenshot/spel-steam-agos-a-game-of-space-wallpaper-3.jpg')";
-	document.body.style.backgroundSize = "contain";
-	makePlane();
-
-	const slider = document.getElementById("boost")
-	const min = slider.min
-	const max = slider.max
-	const value = slider.value
-
-	slider.style.background = `linear-gradient(to right, lime 0%, lime ${(value-min)/(max-min)*100}%, black ${(value-min)/(max-min)*100}%, black 100%)`
-
-	slider.oninput = function() {
-		this.style.background = `linear-gradient(to right, lime 0%, lime ${(this.value-this.min)/(this.max-this.min)*100}%, black ${(this.value-this.min)/(this.max-this.min)*100}%, black 100%)`
-	};
-}
-window.onkeyup = function(e) {
-	var kc = e.keyCode;
-	e.preventDefault();
-	if (kc === 16) {
-		Keys.shift = false;
-	}
-	if (kc === 17) {
-		Keys.ctrl = false;
-	}
-	if (kc === 39) {
-		Keys.right = false;
-	}
-	if (kc === 38) {
-		Keys.up = false;
-	}
-	if (kc === 37) {
-		Keys.left = false;
-	}
-
-};
-
-function load() {
-	update();
-	makePlane();
-	if (id === client1) {
-		const slider = document.getElementById("boost")
-		const min = slider.min
-		const max = slider.max
-		const value = slider.value
-
-		slider.style.background = `linear-gradient(to right, lime 0%, lime ${(value-min)/(max-min)*100}%, black ${(value-min)/(max-min)*100}%, black 100%)`
-
-		slider.oninput = function() {
-			this.style.background = `linear-gradient(to right, lime 0%, lime ${(this.value-this.min)/(this.max-this.min)*100}%, black ${(this.value-this.min)/(this.max-this.min)*100}%, black 100%)`
-		};
-	}
-
-}
-
-function makePlane() {
-	// 	if(imageChoice == null){
-	var plane1 = new Plane(100, 100, "https://i.ibb.co/y8tqg50/Schip.png", "https://i.ibb.co/2dbntvm/flames.gif", "plane1", 50, 20)
-	Planes.push(plane1)
-	Planes.find(o => o.name === "plane1").makePlane();
-	var plane2 = new Plane(100, 100, "https://i.ibb.co/y8tqg50/Schip.png", "https://i.ibb.co/2dbntvm/flames.gif", "plane2", 50, 80)
-	Planes.push(plane2)
-	Planes.find(o => o.name === "plane2").makePlane();
-	// 	}
-	// 	else{
-	// 		var plane1 = new Plane(100, 100, imageChoice, "https://i.ibb.co/2dbntvm/flames.gif", "plane1", 50, 20)
-	// 		Planes.push(plane1)
-	// 		Planes.find(o => o.name === "plane1").makePlane();
-	// 		var plane2 = new Plane(100, 100, imageChoice, "https://i.ibb.co/2dbntvm/flames.gif", "plane2", 50, 80)
-	// 		Planes.push(plane2)
-	// 		Planes.find(o => o.name === "plane2").makePlane();
-	// 	}
-
-
-
-
-}
-
-function update() {
-	if (player === "player1") {
-		requestAnimationFrame(function() {
-			Planes.find(o => o.name === "plane1").Move()
-		});
-	}
-	if (player === "player2") {
-		requestAnimationFrame(function() {
-			Planes.find(o => o.name === "plane2").Move()
-
-		});
-	}
-}
-
-function settings() {
-	document.getElementById("menu").style.display = "none";
-	document.getElementById("setting").style.display = "block";
-	document.getElementById("back").style.display = "block";
-	document.getElementById("setting").style.display = "flex";
-	document.getElementById("setting1").style.display = "block";
-	document.getElementById("setting1").style.display = "flex";
-}
-
-function chooseImage(event) {
-	imageChoice = event.src;
-}
-
-function chooseImageBullet(event) {
-	imageChoiceBullet = event.src;
-}
-
-function checkCollision(a, b) {
-	return !(
-		((a.y + a.height) < (b.y)) ||
-		(a.y > (b.y + b.height)) ||
-		((a.x + a.width) < b.x) ||
-		(a.x > (b.x + b.width))
-	);
-}
-
-function fpsMeter() {
-	let prevTime = Date.now(),
-		frames = 0;
-
-	requestAnimationFrame(function loop() {
-		const time = Date.now();
-		frames++;
-		if (time > prevTime + 1000) {
-			let fps = Math.round((frames * 1000) / (time - prevTime));
-			prevTime = time;
-			frames = 0;
-			document.getElementById("text").innerHTML = "";
-			document.getElementById("text").innerHTML = "FPS: " + fps;
-		}
-
-		requestAnimationFrame(loop);
-	});
-}
-fpsMeter();
-$(function() {
-	$("form").on('submit', function(e) {
-		e.preventDefault();
-	});
-	$("#start").click(function() {
-		connect();
-	});
-	$("#settings").click(function() {
-		settings();
-	});
-	$("#back").click(function() {
-		document.getElementById("menu").style.display = "block";
-		document.getElementById("menu").style.display = "flex";
-		document.getElementById("setting").style.display = "none";
-		document.getElementById("setting1").style.display = "none";
-		document.getElementById("back").style.display = "none";
-	});
-});
-</script>
-<style>
-html, body {
-	font-size: 18px;
-	margin: 0; /* remove default margin */
-	padding: 0; /* remove default padding */
-	width: 100%; /* take full browser width */
-	height: 100%; /* take full browser height*/
-	overflow-x: hidden;
-	background-image:
-		url('https://media.istockphoto.com/vectors/cartoon-moon-surface-landscape-background-vector-id1144328145?k=20&m=1144328145&s=170667a&w=0&h=vM_r94ZZATBeDCYbEPGzs9c9VF3HHBZXVYMezQo0Ick=');
-	background-size: contain;
-	transform: translateZ(0);
-	/* or */
-	transform: translate3d(0, 0, 0);
-	/* or */
-	perspective: 1000;
-	backface-visibility: hidden;
-}
-
-/* body { */
-
-/* } */
-body::-webkit-scrollbar {
-	display: none;
-}
-
-#plane1, #plane2 {
-	transform-origin: center top;
-	touch-action: none;
-	-khtml-user-select: none;
-	-o-user-select: none;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	user-select: none;
-	will-change: transform;
-}
-
-#container {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	/* 	width: 1536px; */
-	/* 	height: 714px; */
-	overflow: hidden;
-	/* 	background-image: */
-	/* 		url('https://s3.gaming-cdn.com/images/products/7676/screenshot/spel-steam-agos-a-game-of-space-wallpaper-3.jpg'); */
-	/* 	background-size: contain; */
-	display: none;
-}
-
-#board {
-	display: table;
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 300px;
-	height: 50px;
-	color: white;
-}
-
-#fps {
-	position: fixed;
-	left: 95%;
-	top: 0%;
-	color: white;
-	width: 100px;
-	height: 50px;
-}
-
-#boost {
-	border-radius: 8px;
-	height: 4px;
-	width: 100px;
-	outline: none;
-	-webkit-appearance: none;
-	border: white solid 0.9px;
-}
-
-#menu {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	padding: 10px;
-	width: 300px;
-	height: 600px;
-	text-align: 'center';
-	display: flex;
-	flex-direction: column;
-	flex-wrap: wrap;
-}
-
-#start, #settings {
-	border-radius: 8px;
-	font-size: 24px;
-	position: relative;
-	margin: 0 auto;
-	display: table-cell;
-	vertical-align: middle;
-	width: 150px;
-	height: 50px;
-	background-color: #1B37FF;
-	vertical-align: middle;
-}
-
-#back {
-	border-radius: 8px;
-	font-size: 24px;
-	position: relative;
-	margin: 0 auto;
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	width: 150px;
-	display: none;
-	height: 50px;
-	top: 500px;
-	background-color: #1B37FF;
-}
-
-#image {
-	/* border-radius: 8px; */
-	font-size: 24px;
-	position: relative;
-	display: table;
-	margin: 0 auto;
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	width: 300px;
-	height: 300px;
-}
-
-#setting {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	padding: 10px;
-	width: 300px;
-	height: 600px;
-	display: none;
-	flex-direction: row;
-	justify-content: center;
-}
-
-#setting1 {
-	position: absolute;
-	left: 50%;
-	top: 80%;
-	transform: translate(-50%, -50%);
-	padding: 10px;
-	width: 300px;
-	height: 600px;
-	display: none;
-	flex-direction: row;
-	justify-content: center;
-}
-
-.images {
-	font-size: 24px;
-	position: relative;
-	margin: 0 auto;
-	width: 180px;
-	opacity: 0.5;
-	height: 150px;
-}
-
-.images:active {
-	opacity: 0.9;
-}
-
-figure {
-	text-align: center;
-	font-family: Georgia, serif;
-	font-size: 25px;
-	letter-spacing: 2px;
-	word-spacing: 2px;
-	color: white;
-	font-weight: 700;
-	text-decoration: none solid rgb(68, 68, 68);
-	font-style: italic;
-	font-variant: small-caps;
-	text-transform: uppercase;
-}
-
-input[type='range']::-webkit-slider-thumb {
-	display: none;
-}
-
-@media screen and (max-width: 992px) {
-	.images {
-		font-size: 24px;
-		position: relative;
-		margin: 0 auto;
-		width: 90px;
-		opacity: 0.5;
-		height: 75px;
-	}
-	figure {
-		text-align: center;
-		font-family: Georgia, serif;
-		font-size: 10px;
-		letter-spacing: 2px;
-		word-spacing: 2px;
-		color: white;
-		font-weight: 700;
-		text-decoration: none solid rgb(68, 68, 68);
-		font-style: italic;
-		font-variant: small-caps;
-		text-transform: uppercase;
-	}
-}
-
-@media screen and (max-width: 992px) {
-	body, html {
-		background-color: lightblue;
-	}
-}
-</style>
-</head>
-<body id="body">
-
-	<form class="form-inline" style="color: white">
-		<div id="menu">
-			<img id="image" src="https://i.ibb.co/LN0KRGz/logo.png">
-			<button id="start" class="btn btn-default" type="submit">Start
-				Game</button>
-			<br>
-			<button id="settings" class="btn btn-default" type="submit">Settings</button>
-		</div>
-		<div id="setting">
-			<figure>
-				<img onclick="chooseImage(event.target)" class="images"
-					src="https://i.ibb.co/y8tqg50/Schip.png">
-				<figcaption>Blue</figcaption>
-			</figure>
-			<figure>
-				<img onclick="chooseImage(event.target)" class="images"
-					src="https://i.ibb.co/JnxCDT0/ship-Red.png">
-				<figcaption>Red</figcaption>
-			</figure>
-			<figure>
-				<img onclick="chooseImage(event.target)" class="images"
-					src="https://i.ibb.co/yQMSXTZ/ship-Greenj.png">
-				<figcaption>Green</figcaption>
-			</figure>
-			<figure>
-				<img onclick="chooseImage(event.target)" class="images"
-					src="https://i.ibb.co/LxGGvkq/ship-Orange.png">
-				<figcaption>Orange</figcaption>
-			</figure>
-			<figure>
-				<img onclick="chooseImage(event.target)" class="images"
-					src="https://i.ibb.co/DrKGZ4P/ship-Yellow.png">
-				<figcaption>Yellow</figcaption>
-			</figure>
-		</div>
-		<div id="setting1">
-			<figure>
-				<img onclick="chooseImageBullet(event.target)" class="images"
-					src="https://i.ibb.co/b261bvN/blast-Blue.png">
-				<figcaption>Blue</figcaption>
-			</figure>
-			<figure>
-				<img onclick="chooseImageBullet(event.target)" class="images"
-					src="https://i.ibb.co/8zTJrZC/bullet.png">
-				<figcaption>Red</figcaption>
-			</figure>
-			<figure>
-				<img onclick="chooseImageBullet(event.target)" class="images"
-					src="https://i.ibb.co/jkT4Xsb/blast-Green.png">
-				<figcaption>Green</figcaption>
-			</figure>
-			<figure>
-				<img onclick="chooseImageBullet(event.target)" class="images"
-					src="https://i.ibb.co/0hSdx34/blast-Orange.png">
-				<figcaption>Orange</figcaption>
-			</figure>
-			<figure>
-				<img onclick="chooseImageBullet(event.target)" class="images"
-					src="https://i.ibb.co/jTwKd2w/blast-Yellow.png">
-				<figcaption>Yellow</figcaption>
-			</figure>
-		</div>
-		<button id="back" class="btn btn-default" type="submit">Back</button>
-	</form>
-	<!-- 	ship -->
-	<!-- 	red https://i.ibb.co/JnxCDT0/ship-Red.png -->
-	<!-- green https://i.ibb.co/yQMSXTZ/ship-Greenj.png -->
-	<!-- orange https://i.ibb.co/LxGGvkq/ship-Orange.png -->
-	<!-- yellow https://i.ibb.co/DrKGZ4P/ship-Yellow.png -->
-	<!-- bullet -->
-	<!-- blue https://i.ibb.co/b261bvN/blast-Blue.png -->
-	<!-- green https://i.ibb.co/jkT4Xsb/blast-Green.png -->
-	<!-- orange https://i.ibb.co/0hSdx34/blast-Orange.png-->
-	<!-- yellow https://i.ibb.co/jTwKd2w/blast-Yellow.png -->
-	<!--             <div id="main" style="display:none"> -->
-	<div id="container"></div>
-	<div id="board" style="display: none">
-		<h2 id="score">Levens: 100</h2>
-		<!-- 		<h2 id="boost">Boost: Ready</h2> -->
-		<input id="boost" type="range" min="0" value="60" max="60" />
-	</div>
-	<div style="display: none" id="fps">
-		<p id="text">
-	</div>
-	<!-- 	</div> -->
-	<script>
-	var  Keys = {
-		    up: false,
-		    left: false,
-		    right: false,
-		    ctrl: false,
-		    shift:false
-		  }
-	
-		  window.onkeydown = function( e ) {
-		    var kc = e.keyCode;
-		    e.preventDefault();
-		    if(kc === 16){ Keys.shift = true;}
-		    if(kc === 17){ Keys.ctrl = true;}
-		    if ( kc === 39 ){ Keys.right = true;}
-		    if ( kc === 38 ){ Keys.up = true;}
-		    if ( kc === 37 ){ Keys.left = true;}
-		  };
-		  
-		  
-	</script>
-
-</body>
+   <head>
+      <title>1v1 Space Shooter</title>
+      <meta name="viewport" content="width=device-width">
+      <!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+      <link th:href="@{/styles/cssandjs/main.css}" rel="stylesheet" />
+      <link th:href="@{/styles/cssandjs/end.css}" rel="stylesheet" />
+      <script
+         src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+      <script
+         src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+      <script
+         src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+      <script type="text/javascript" th:src="@{/js/cssandjs/script.js}"></script>
+   </head>
+   <body id="body">
+      <div id="HoofdContainer" style="color: white">
+         <button class="buttons" onclick="login()" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)" id="login">Login</button>
+         <div id="menu" style="display:none">
+            <img id="image" src="http://192.168.18.77:8080/images/logo.png">
+            <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)" id="start">Start
+            Game</button>
+            <br>
+            <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)"
+               id="settings">Settings</button>
+            <br>
+            <div class="box">
+               <div class="input-wrapper">
+                  <input type="text" id="input" class="form-control"
+                     placeholder="Nickname" maxlength="10"> <label for="input"
+                     class="control-label">Max 10 characters long</label>
+               </div>
+            </div>
+         </div>
+         <div id="setting">
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/ship.png">
+               <figcaption>Blue</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/ship_Red.png">
+               <figcaption>Red</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/ship_Green.png">
+               <figcaption>Green</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/ship_purple.png">
+               <figcaption>Purple</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/ship_Yellow.png">
+               <figcaption>Yellow</figcaption>
+            </figure>
+         </div>
+         <div id="setting1">
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/blast_Blue.png">
+               <figcaption>Blue</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/blast_Red.png">
+               <figcaption>Red</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/blast_Green.png">
+               <figcaption>Green</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/blast_purple.png">
+               <figcaption>Purple</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)"  onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
+                  src="http://192.168.18.77:8080/images/blast_Yellow.png">
+               <figcaption>Yellow</figcaption>
+            </figure>
+         </div>
+         <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)" id="back">Back</button>
+      </div>
+      <div id="container"></div>
+      <p class="loading">Waiting for other player to connect</p>
+      <p id="countdown" >Game starts in 4</p>
+      <div id="board" style="display: none">
+         <h2 id="levens">
+            Levens: <span id="score">100</span>
+         </h2>
+         <!-- 		<h2 id="boost">Boost: Ready</h2> -->
+         <input id="boost" type="range" min="0" value="60" max="60" />
+      </div>
+      <div style="display: none" id="fps">
+         <p id="text">
+      </div>
+      <script>
+         var Keys = {
+         	up : false,
+         	left : false,
+         	right : false,
+         	ctrl : false,
+         	shift : false
+         }
+         
+         window.onkeydown = function(e) {
+         	var kc = e.keyCode;
+         	if (kc === 16) {
+         		Keys.shift = true;
+         		e.preventDefault();
+         	}
+         	if (kc === 17) {
+         		Keys.ctrl = true;
+         	}
+         	if (kc === 39) {
+         		Keys.right = true;
+         	}
+         	if (kc === 38) {
+         		Keys.up = true;
+         	}
+         	if (kc === 37) {
+         		Keys.left = true;
+         	}
+         };
+      </script>
+      <div id="endScreen" style="display: none">
+         <div class="gameover">
+            <p id="zin">GAME OVER</p>
+         </div>
+         <div class="continue">
+            <p>PLAY AGAIN?</p>
+         </div>
+         <div class="keuzes">
+            <div class="yes">
+               <a href="#" onclick="window.location.reload(true)"> YES </a>
+            </div>
+            <div class="no">
+               <a href="http://192.168.0.101:8080/End"> NO </a>
+            </div>
+         </div>
+      </div>
+      <footer id="footer" role="contentinfo" style="bottom: 0;">
+         <div class="wrap">
+            <b>Made by Bram Verbeiren</b>
+         </div>
+      </footer>
+   </body>
 </html>

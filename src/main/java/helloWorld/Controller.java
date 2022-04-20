@@ -35,15 +35,6 @@ public class Controller {
 	public	Iterable<Plane> test() {
 		return planeRep.getAllPlane();
 	}
-//	@GetMapping("/get")
-//	public File getFile() throws IOException {
-//
-//		Resource resource = new ClassPathResource("bullet.png");
-//
-//		InputStream input = resource.getInputStream();
-//
-//		File file = resource.getFile();
-//		return file;
-//	}
+
 
 }
