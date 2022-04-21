@@ -26,15 +26,15 @@ Er gaan zeker nog meerdere dingen volgen, dus zeker niet getreurd.
 
 
 
-# Screenshots
+## Screenshots
 
-## Start Menu
+### Start Menu
 ![App Screenshot](https://i.postimg.cc/D0ND98MN/versie-2-Start-menu.png)
-## Settings
+### Settings
 ![App Screenshot](https://i.postimg.cc/XJVTdM5s/verise-2-settings.png)
-## Lobby
+### Lobby
 ![App Screenshot](https://i.postimg.cc/900KgGJT/Versie-2-lobby.png)
-## Teller voor het spel begint
+### Teller voor het spel begint
 ![App Screenshot](https://i.postimg.cc/xCtBPsyn/Versie-2-countdown.png)
-## Het echte spel.
-![App Screenshot](https://i.postimg.cc/h4ZHz5t0/Versie-2-spel.png)
+### Het echte spel.
+![App Screenshot](https://i.ibb.co/HYCBrv4/Versie-2-spel.png)
