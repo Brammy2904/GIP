@@ -1,17 +1,17 @@
 var userName;
 
-var HoverSound = new Audio("http://192.168.18.77:8080/sounds/buttonHover.wav")
-var ClickSound = new Audio("http://192.168.18.77:8080/sounds/click.wav")
-var audio = new Audio("http://192.168.18.77:8080/sounds/menuSong.mp3");
-var startSound = new Audio("http://192.168.18.77:8080/sounds/countdown.mp3")
-var TypSound = new Audio("http://192.168.18.77:8080/sounds/typSound.mp3")
-var waiting = ["http://192.168.18.77:8080/sounds/waiting.mp3"]
+var HoverSound = new Audio("http://192.168.18.101:8080/sounds/buttonHover.wav")
+var ClickSound = new Audio("http://192.168.18.101:8080/sounds/click.wav")
+var audio = new Audio("http://192.168.18.101:8080/sounds/menuSong.mp3");
+var startSound = new Audio("http://192.168.18.101:8080/sounds/countdown.mp3")
+var TypSound = new Audio("http://192.168.18.101:8080/sounds/typSound.mp3")
+var waiting = ["http://192.168.18.101:8080/sounds/waiting.mp3"]
 //, "https://sndup.net/v2q7/d", "https://sndup.net/tr74/d", "https://sndup.net/frnp/d", "https://sndup.net/q48s/d", "https://sndup.net/k585/d"
 var waitingSound = new Audio(waiting[Math.floor(Math.random()*waiting.length)])
 var winner;
 var stompClient = null;
 var Ids = [];
-var audioEx = new Audio("http://192.168.18.77:8080/sounds/explosie.wav")
+var audioEx = new Audio("http://192.168.18.101:8080/sounds/explosie.wav")
 var imageChoice = null;
 var imageChoiceBullet = null;
 var Planes = [];
@@ -34,8 +34,8 @@ class Plane {
 	speed = 6.0;
 	planeTop;
 	planeLeft;
-	audioShoot = new Audio("http://192.168.18.77:8080/sounds/Blast.mp3");
-	audioBoost = new Audio("http://192.168.18.77:8080/sounds/boost.mp3");
+	audioShoot = new Audio("http://192.168.18.101:8080/sounds/Blast.mp3");
+	audioBoost = new Audio("http://192.168.18.101:8080/sounds/boost.mp3");
 	soundShoot = false;
 	executed = false;
 	nickname;
@@ -438,7 +438,7 @@ class Bullet {
 }
 
 function connect() {
-	var socket = new SockJS('http://192.168.18.77:8080/websocket', [], {
+	var socket = new SockJS('http://192.168.18.101:8080/websocket', [], {
 		sessionId: () => {
 			var connid = getRandom()
 			sessionId = connid;
@@ -495,7 +495,7 @@ function connect() {
 						document.getElementById('plane2').style.display = "block"
 						document.getElementById('plane1').style.display = "block"
 						countdown1.style.display = "none"
-						var theme = new Audio("http://192.168.18.77:8080/sounds/BattleThemeSong.mp3");
+						var theme = new Audio("http://192.168.18.101:8080/sounds/BattleThemeSong.mp3");
 						theme.volume = 0.2;
 						theme.loop = true;
 						theme.play();

@@ -43,7 +43,7 @@ public class WebController {
 	@SendTo("/plane/name/test")
 	public Integer name(@RequestBody String test){
 		if(array.size() >= 2) {
-			array.clear();
+			return 0;
 		}
 		array.add(test);
 	    return array.size();
