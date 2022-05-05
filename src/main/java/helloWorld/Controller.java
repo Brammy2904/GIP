@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -26,15 +26,19 @@ import org.springframework.core.io.ClassPathResource;
 public class Controller {
 
 	@Autowired
-	private PlaneRepository planeRep;
+	private HScoresRepository HScoreRep;
 
 
 	
 
-	@GetMapping("/test")
-	public	Iterable<Plane> test() {
-		return planeRep.getAllPlane();
+	@GetMapping("/highscore")
+	public	Iterable<HighScores> test() {
+		return HScoreRep.getAllHScores();
 	}
 
+	@GetMapping("/getHighScore")
+	public Iterable<HighScores> findHighScoreByName(@RequestParam(required = false) String name) {
 
+		return HScoreRep.findHighScore(name);
+	}
 }

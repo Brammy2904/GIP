@@ -4,7 +4,7 @@
 Een werkend spel waar je jouw ruimteschip kunt laten bewegen, kunt laten schieten en gebruik kan maken van een boost.
 
 Je kijkt van boven af mee met je ruimteschip zodat alles gemakkelijk te zien is.
-In deze versie heb ik mijn single player spel kunnen ombouwen naar een multiplayer spel.
+In deze versie heb ik mijn spel wat leuker gemaakt door verschillende zaken toe te voegen.
 
 
 Dit is in het kader van mijn GIP opdracht.
@@ -23,18 +23,24 @@ Er gaan zeker nog meerdere dingen volgen, dus zeker niet getreurd.
 - Leuke geluidseffecten en achtergrondmuziek.
 - Een levens teller die van kleur verandert naarmate je levens dalen.
 - Een lobby met achtergrondmuziek als speler 2 nog niet is gestart.
+- Ontwijken door de spatie toets en de pijltjes in te houden.
+- Je highscore kunnen bekijken op een aparte pagina.
+- Schuilen achter een muur op de map.
+- Een explosie die te zien en te horen is wanneer een speler wordt geraakt.
 
 
 
-## Screenshots
+# Screenshots
 
-### Start Menu
+## Start Menu
 ![App Screenshot](https://i.postimg.cc/D0ND98MN/versie-2-Start-menu.png)
-### Settings
+## Settings
 ![App Screenshot](https://i.postimg.cc/XJVTdM5s/verise-2-settings.png)
-### Lobby
+## Lobby
 ![App Screenshot](https://i.postimg.cc/900KgGJT/Versie-2-lobby.png)
-### Teller voor het spel begint
+## Teller voor het spel begint
 ![App Screenshot](https://i.postimg.cc/xCtBPsyn/Versie-2-countdown.png)
-### Het echte spel.
-![App Screenshot](https://i.ibb.co/HYCBrv4/Versie-2-spel.png)
+## Het echte spel.
+![App Screenshot](https://i.postimg.cc/h4ZHz5t0/Versie-2-spel.png)
+## Highscores
+![App Screenshot](https://i.ibb.co/s3kqLtR/Versie-3-Highscores.png)

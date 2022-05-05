@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class HtmlContoller {
 	@Autowired
-	private PlaneRepository planeRep;
+	private HScoresRepository HScoresRep;
 	
 	@GetMapping("/start")
 	String ShowPage() {
@@ -28,6 +28,10 @@ public class HtmlContoller {
 	@GetMapping("/End")
 	String rickroll() {
 		return "Rickroll";
+	}
+	@GetMapping("/highscores")
+	String highscores() {
+		return "HScores";
 	}
 	
 }
