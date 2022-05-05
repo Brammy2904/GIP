@@ -1,17 +1,22 @@
 var userName;
-
-var HoverSound = new Audio("http://192.168.18.101:8080/sounds/buttonHover.wav")
-var ClickSound = new Audio("http://192.168.18.101:8080/sounds/click.wav")
-var audio = new Audio("http://192.168.18.101:8080/sounds/menuSong.mp3");
-var startSound = new Audio("http://192.168.18.101:8080/sounds/countdown.mp3")
-var TypSound = new Audio("http://192.168.18.101:8080/sounds/typSound.mp3")
-var waiting = ["http://192.168.18.101:8080/sounds/waiting.mp3"]
+var intrvl;
+var hp = 40;
+let canvas;
+var lifeInterval;
+var spelDuur = 0;
+var HoverSound = new Audio("http://192.168.18.98:8080/sounds/buttonHover.wav")
+var ClickSound = new Audio("http://192.168.18.98:8080/sounds/click.wav")
+var audio = new Audio("http://192.168.18.98:8080/sounds/menuSong.mp3");
+var startSound = new Audio("http://192.168.18.98:8080/sounds/countdown.mp3")
+var TypSound = new Audio("http://192.168.18.98:8080/sounds/typSound.mp3")
+var waiting = ["http://192.168.18.98:8080/sounds/waiting.mp3"]
 //, "https://sndup.net/v2q7/d", "https://sndup.net/tr74/d", "https://sndup.net/frnp/d", "https://sndup.net/q48s/d", "https://sndup.net/k585/d"
-var waitingSound = new Audio(waiting[Math.floor(Math.random()*waiting.length)])
+var waitingSound = new Audio(waiting[Math.floor(Math.random() * waiting.length)])
 var winner;
+var loser;
 var stompClient = null;
 var Ids = [];
-var audioEx = new Audio("http://192.168.18.101:8080/sounds/explosie.wav")
+var audioEx = new Audio("http://192.168.18.98:8080/sounds/explosie.wav")
 var imageChoice = null;
 var imageChoiceBullet = null;
 var Planes = [];
@@ -34,12 +39,14 @@ class Plane {
 	speed = 6.0;
 	planeTop;
 	planeLeft;
-	audioShoot = new Audio("http://192.168.18.101:8080/sounds/Blast.mp3");
-	audioBoost = new Audio("http://192.168.18.101:8080/sounds/boost.mp3");
+	audioShoot = new Audio("http://192.168.18.98:8080/sounds/Blast.mp3");
+	audioBoost = new Audio("http://192.168.18.98:8080/sounds/boost.mp3");
 	soundShoot = false;
 	executed = false;
 	nickname;
 	levens = 50;
+	vlam = "false";
+	rotation;
 	constructor(width, height, imgPlane, imgFlames, name, planeTop, planeLeft) {
 		this.width = width;
 		this.height = height;
@@ -51,9 +58,9 @@ class Plane {
 	}
 	makePlane() {
 		var div = document.createElement("div")
-		div.style.position = "relative";
-		div.style.width = 100 + "px";
-		div.style.height = 100 + "px";
+		div.style.position = "absolute";
+		div.style.width = this.width + "px";
+		div.style.height = this.height + "px";
 		div.style.top = this.planeTop + "%"
 		div.style.left = this.planeLeft + "%";
 		div.setAttribute("id", this.name)
@@ -163,32 +170,129 @@ class Plane {
 		var rect = plane.getBoundingClientRect();
 		this.saved_moves = document.getElementById(this.name).style.transform;
 		var move = "";
+
 		if (Keys.up) {
+
+			var raken1 = collide(rect, document.getElementById("astro").getBoundingClientRect())
+
+			if (raken1 === "bottom") {
+				plane.style.top = parseInt(plane.style.top) + 1 + "vh"
+				move = ""
+			}
+			if (raken1 === "left") {
+				plane.style.left = parseInt(plane.style.left) - 1 + "vh"
+				move = ""
+			}
+			if (raken1 === "right") {
+				plane.style.left = parseInt(plane.style.left) + 1 + "vh"
+				move = ""
+			}
+			if (raken1 === "none") {
+				if (rect.top <= 0) {
+					plane.style.top = parseInt(plane.style.top) + 1 + "vh"
+				}
+				if (rect.bottom >= maxHeight) {
+					plane.style.top = parseInt(plane.style.top) - 1 + "vh"
+				}
+				if (rect.left <= 0) {
+					plane.style.left = parseInt(plane.style.left) + 1 + "vh"
+				}
+				if (rect.right >= maxWidth) {
+					plane.style.left = parseInt(plane.style.left) - 1 + "vh"
+				} else {
+					this.vlam = "true";
+					move = move + ' translateY( -' + Math.round(this.speed) / 10 + 'vh )'
+					if (document.getElementById(this.name + "F").style.display != "block") {
+						document.getElementById(this.name + "F").style.display = "block"
+
+					}
+					if (!(document.getElementById(this.name + "F").src === 'http://192.168.18.98:8080/images/flames.gif') && !Keys.ctrl) {
+						document.getElementById(this.name + "F").src = 'http://192.168.18.98:8080/images/flames.gif'
+
+					}
+				}
+			}
+		}
+		if (!Keys.up) {
+			if (document.getElementById(this.name + "F").style.display != "none") {
+				document.getElementById(this.name + "F").style.display = "none";
+				this.vlam = "false";
+			}
+		}
+		//		if ((!(Keys.space && Keys.left) || !(Keys.space && Keys.right)) && Keys.up) {
+		//			this.vlam = "true";
+		//			if (document.getElementById(this.name + "F").style.display != "block") {
+		//				document.getElementById(this.name + "F").style.display = "block"
+		//
+		//			}
+
+		//			if ((!(Keys.space && Keys.left) && !(Keys.space && Keys.right))) {
+		//				if (this.exec) {
+		//					this.exec = false;
+		//					document.getElementById(this.name + "F").src = 'http://192.168.18.98:8080/images/flames.gif'
+		//				}
+		//			}
+
+		//		}
+		if (Keys.space && Keys.left) {
 			if (rect.top <= 0) {
-				plane.style.top = parseInt(plane.style.top) + 1 + "%"
+				plane.style.top = parseInt(plane.style.top) + 1 + "vh"
 			}
 			if (rect.bottom >= maxHeight) {
-				plane.style.top = parseInt(plane.style.top) - 1 + "%"
+				plane.style.top = parseInt(plane.style.top) - 1 + "vh"
 			}
 			if (rect.left <= 0) {
-				plane.style.left = parseInt(plane.style.left) + 1 + "%"
+				plane.style.left = parseInt(plane.style.left) + 1 + "vh"
 			}
 			if (rect.right >= maxWidth) {
-				plane.style.left = parseInt(plane.style.left) - 1 + "%"
-			} else {
-				//				plane.style.transform += 'translateZ( -' + Math.round(this.speed) / 10 + 'vh )';
-				move = move + ' translateY( -' + Math.round(this.speed) / 10 + 'vh )'
+				plane.style.left = parseInt(plane.style.left) - 1 + "vh"
+			}
+			else {
+				move = move + 'translate(-1vh, 0 )'
+			}
+			this.vlam = "links";
+			document.getElementById(this.name + "F").style.display = "block";
+			if (!(document.getElementById(this.name + "F").src === 'http://192.168.18.98:8080/images/flameLinks.gif')) {
+				document.getElementById(this.name + "F").src = 'http://192.168.18.98:8080/images/flameLinks.gif'
+			}
+
+		}
+		if (Keys.space && Keys.right) {
+			if (rect.top <= 0) {
+				plane.style.top = parseInt(plane.style.top) + 1 + "vh"
+			}
+			if (rect.bottom >= maxHeight) {
+				plane.style.top = parseInt(plane.style.top) - 1 + "vh"
+			}
+			if (rect.left <= 0) {
+				plane.style.left = parseInt(plane.style.left) + 1 + "vh"
+			}
+			if (rect.right >= maxWidth) {
+				plane.style.left = parseInt(plane.style.left) - 1 + "vh"
+			}
+			else {
+				move = move + 'translate(1vh, 0 )'
+
+			}
+			this.vlam = "rechts";
+			document.getElementById(this.name + "F").style.display = "block";
+			if (!(document.getElementById(this.name + "F").src === 'http://192.168.18.98:8080/images/flameRechts.gif')) {
+				document.getElementById(this.name + "F").src = 'http://192.168.18.98:8080/images/flameRechts.gif'
 			}
 		}
-		if (Keys.right) {
+		if (Keys.right && !Keys.space) {
 			//			plane.style.transform += 'rotate( 3deg )';
 			move = move + ' rotate( 3deg )'
-		} else if (Keys.left) {
+			this.rotation += ' rotate( 3deg )'
+		} else if (Keys.left && !Keys.space) {
 			//			plane.style.transform += 'rotate( -3deg )';
 			move = move + ' rotate( -3deg )'
+			this.rotation += ' rotate( -3deg )'
 		}
 		if (Keys.ctrl) {
+
 			if (!Planes.find(o => o.name === this.name).executed) {
+				this.vlam = "boost"
 				Planes.find(o => o.name === this.name).boostDown()
 				if (this.name === "plane1") {
 					var array = {
@@ -206,6 +310,7 @@ class Plane {
 				}
 			}
 		}
+
 		if (!Keys.ctrl) {
 			if (Planes.find(o => o.name === this.name).executed) {
 				clearInterval(Planes.find(o => o.name === this.name).boostInterval)
@@ -214,6 +319,7 @@ class Plane {
 					var array = {
 						"waarde": "false",
 						"id": id
+						
 					}
 					stompClient.send("/app/plane/boost/1", {}, JSON.stringify(array))
 				}
@@ -221,6 +327,7 @@ class Plane {
 					var array = {
 						"waarde": "false",
 						"id": id
+						
 					}
 					stompClient.send("/app/plane/boost/2", {}, JSON.stringify(array))
 				}
@@ -270,26 +377,28 @@ class Plane {
 		var y = parseInt(document.getElementById(this.name).style.top);
 		this.saved_moves += move;
 
-		if (move != "") {
-			if (this.name === "plane1") {
-				var coords = {
-					"x": x,
-					"y": y,
-					"transform": move,
-					"id": id
-				}
-				stompClient.send("/app/plane/move1", {}, JSON.stringify(coords));
+
+		if (this.name === "plane1") {
+			var coords = {
+				"x": x,
+				"y": y,
+				"transform": move,
+				"id": id,
+				"vlam": this.vlam
 			}
-			if (this.name === "plane2") {
-				var coords = {
-					"x": x,
-					"y": y,
-					"transform": move,
-					"id": id
-				}
-				stompClient.send("/app/plane/move2", {}, JSON.stringify(coords));
-			}
+			stompClient.send("/app/plane/move1", {}, JSON.stringify(coords));
 		}
+		if (this.name === "plane2") {
+			var coords = {
+				"x": x,
+				"y": y,
+				"transform": move,
+				"id": id,
+				"vlam": this.vlam
+			}
+			stompClient.send("/app/plane/move2", {}, JSON.stringify(coords));
+		}
+
 		plane.style.transform += move;
 		var animation = requestAnimationFrame(function(plane) {
 			return function() {
@@ -313,6 +422,128 @@ class Plane {
 		}
 
 	}
+	checkCol(bounding, bullet, inter) {
+		var raken = checkCollision(bounding, document.getElementById("astro").getBoundingClientRect())
+		if (raken) {
+			if (player.split("r")[1] === this.name.split("e")[1]) {
+				var sound = new Audio('http://192.168.18.98:8080/sounds/hitWall.mp3')
+				sound.volume = 0.9;
+				sound.play();
+			}
+
+			document.getElementById("container").removeChild(bullet);
+			clearInterval(inter)
+		}
+	}
+	checkRaken(plane, bounding, bullet, planeId, inter) {
+		if (plane.name === "plane1") {
+			var vliegtuig = document.getElementById("plane2").getBoundingClientRect();
+			var rakenPlane = checkCollision(bounding, vliegtuig);
+			if (rakenPlane) {
+				document.getElementById("container").append(new Explosie(106, 176, "http://192.168.18.98:8080/images/expl.gif", document.getElementById("plane2").getBoundingClientRect().y, document.getElementById("plane2").getBoundingClientRect().x).explode())
+				setTimeout(function() {
+					var explosies = document.getElementsByClassName("explosie");
+					for (var i = 0; i < explosies.length; i++) {
+						document.getElementById("container").removeChild(explosies[i])
+					}
+				}, 600)
+				Planes.find(o => o.name === "plane2").levens -= 1;
+				if (player === "Player2") {
+
+					var perc = parseDecimal(Planes.find(o => o.name === "plane2").levens * 2)
+					document.getElementById("score").style.color = getColorForPercentage(perc)
+					document.getElementById("score").innerHTML = Planes.find(o => o.name === "plane2").levens;
+					if (Planes.find(o => o.name === "plane2").levens === hp) {
+						Planes.find(o => o.name === "plane2").levens = 0;
+						if (Planes.find(o => o.name === "plane1").nickname != null) {
+							winner = Planes.find(o => o.name === "plane1").nickname
+
+
+						} else {
+							winner = "Player1";
+						}
+						loser = Planes.find(o => o.name === "plane2").nickname != null ? Planes.find(o => o.name === "plane2").nickname : "Player2"
+						var array = {
+							"player": player,
+							"winner": winner,
+							"plane": plane.name,
+							"loser": loser
+						}
+						stopTimer();
+						stompClient.send("/app/plane/won", {}, JSON.stringify(array));
+					}
+
+				}
+				document.getElementById("container").removeChild(bullet)
+				//				explosion(planeId)
+
+				clearInterval(inter)
+				//							trany = 0;
+			}
+		}
+		if (plane.name === "plane2") {
+			var vliegtuig = document.getElementById("plane1").getBoundingClientRect();
+			var rakenPlane = checkCollision(bounding, vliegtuig);
+			if (rakenPlane) {
+				if (document.getElementsByClassName("explosie")[0] != null) {
+					var elems = Array.from(document.getElementsByClassName("explosie"));
+					elems.forEach(div => {
+						div.remove();
+					})
+				}
+				document.getElementById("container").append(new Explosie(106, 176, "http://192.168.18.98:8080/images/expl.gif", document.getElementById("plane1").getBoundingClientRect().y, document.getElementById("plane1").getBoundingClientRect().x).explode())
+				setTimeout(function() {
+					var explosies = document.getElementsByClassName("explosie");
+					for (var i = 0; i < explosies.length; i++) {
+						document.getElementById("container").removeChild(explosies[i])
+					}
+				}, 600)
+				Planes.find(o => o.name === "plane1").levens -= 1;
+				if (player === "Player1") {
+
+					var perc = parseDecimal(Planes.find(o => o.name === "plane1").levens * 2)
+					document.getElementById("score").style.color = getColorForPercentage(perc)
+					document.getElementById("score").innerHTML = Planes.find(o => o.name === "plane1").levens;
+					if (Planes.find(o => o.name === "plane1").levens === hp) {
+						Planes.find(o => o.name === "plane1").levens = 0;
+						if (Planes.find(o => o.name === "plane2").nickname != null) {
+							winner = Planes.find(o => o.name === "plane2").nickname
+						} else {
+							winner = "Player2";
+						}
+						loser = Planes.find(o => o.name === "plane1").nickname != null ? Planes.find(o => o.name === "plane1").nickname : "Player1"
+						var array = {
+							"player": player,
+							"winner": winner,
+							"plane": plane.name,
+							"loser": loser
+						}
+						stompClient.send("/app/plane/won", {}, JSON.stringify(array));
+						stopTimer();
+					}
+
+				}
+				document.getElementById("container").removeChild(bullet)
+				//				explosion(planeId)
+
+				clearInterval(inter)
+				//							trany = 0;
+			}
+		}
+	}
+	makeAstro() {
+		var image = new Image();
+		image.crossOrigin = "Anonymous";
+		image.src = 'http://192.168.18.98:8080/images/wall.png'
+		image.style.position = "fixed"
+		image.setAttribute("id", "astro")
+		image.style.width = 10 + "%"
+		image.style.height = 60 + "%"
+		image.style.top = 0 + "%"
+		image.style.left = 50 - (parseInt(image.style.width) / 2) + "%"
+
+		document.getElementById('container').append(image)
+	}
 }
 class Bullet {
 	width;
@@ -330,21 +561,27 @@ class Bullet {
 	makeBullet(plane, speler) {
 		var trany = 0;
 		var saved = Planes.find(o => o.name === plane.name).saved_moves;
+		var saved2 = plane.rotation;
 		var planeId = plane.name.substring(5, 6)
 		var bullet = document.createElement("img")
-		if(player != null){
-		if (planeId === player.split("r", 2)[1]) {
-			bullet.src = this.img;
-		}
-		if (planeId != player.split("r", 2)[1]) {
-			if (imgBull == null) {
-				bullet.src = this.backupImg;
+		if (player != null) {
+			if (planeId === player.split("r", 2)[1]) {
+				bullet.src = this.img;
 			}
-			if (imgBull != null) {
-				bullet.src = imgBull;
+			if (planeId != player.split("r", 2)[1]) {
+				if (imgBull == null) {
+					bullet.src = this.backupImg;
+				}
+				if (imgBull != null) {
+					bullet.src = imgBull;
+				}
 			}
 		}
-		}
+		var rectP = document.getElementById(plane.name).getBoundingClientRect();
+		var cx = rectP.left + rectP.width * 0.5;
+		var cy = rectP.top + rectP.height * 0.5;
+		var x = cx - this.width * 0.5;
+		var y = cy - this.height * 0.5;
 		bullet.style.position = "absolute";
 		bullet.style.width = this.width + "px";
 		bullet.style.height = this.height + "px";
@@ -354,7 +591,7 @@ class Bullet {
 		if (plane.name === "plane1") {
 			bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 4 + "%";
 		} else {
-			bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 20 + "%";
+			bullet.style.top = parseInt(document.getElementById(plane.name).style.top) +4 + "%";
 		}
 		bullet.style.left = parseInt(document.getElementById(plane.name).style.left) + 4 + "%"
 		bullet.style.transform = saved;
@@ -366,66 +603,8 @@ class Bullet {
 				var bullets = document.getElementsByClassName("bullet" + planeId)
 				for (var i = 0; i < bullets.length; i++) {
 					const bounding = bullets[i].getBoundingClientRect();
-					if (plane.name === "plane1") {
-						var vliegtuig = document.getElementById("plane2").getBoundingClientRect();
-						var rakenPlane = checkCollision(bounding, vliegtuig);
-						if (rakenPlane) {
-							if (player === "player2") {
-								plane.levens--;
-								if (plane.levens === 0) {
-									plane.levens = 0;
-									if (Planes.find(o => o.name === "plane1").nickname != null) {
-										winner = Planes.find(o => o.name === "plane1").nickname
-									} else {
-										winner = plane.name;
-									}
-									var array = {
-										"player": player,
-										"winner": winner,
-										"waarde": "true"
-									}
-									stompClient.send("/app/plane/won", {}, JSON.stringify(array));
-								}
-								var perc = parseDecimal(plane.levens * 2)
-								document.getElementById("score").style.color = getColorForPercentage(perc)
-								document.getElementById("score").innerHTML = plane.levens;
-							}
-							document.getElementById("container").removeChild(bullets[i])
-							explosion(speler)
-							clearInterval(inter)
-							trany = 0;
-						}
-					}
-					if (plane.name === "plane2") {
-						var vliegtuig = document.getElementById("plane1").getBoundingClientRect();
-						var rakenPlane = checkCollision(bounding, vliegtuig);
-						if (rakenPlane) {
-							if (player === "player1") {
-								plane.levens--;
-								if (plane.levens === 0) {
-									plane.levens = 0;
-									if (Planes.find(o => o.name === "plane2").nickname != null) {
-										winner = Planes.find(o => o.name === "plane2").nickname
-									} else {
-										winner = plane.name;
-									}
-									var array = {
-										"player": player,
-										"winner": winner,
-										"waarde": "true"
-									}
-									stompClient.send("/app/plane/won", {}, JSON.stringify(array));
-								}
-								var perc = parseDecimal(plane.levens * 2)
-								document.getElementById("score").style.color = getColorForPercentage(perc)
-								document.getElementById("score").innerHTML = plane.levens;
-							}
-							document.getElementById("container").removeChild(bullets[i])
-							explosion(speler)
-							clearInterval(inter)
-							trany = 0;
-						}
-					}
+					plane.checkRaken(plane, bounding, bullets[i], planeId, inter);
+					plane.checkCol(bounding, bullets[i], inter)
 					if (bounding.top < 0 || bounding.left < 0 || bounding.bottom > maxHeight || bounding.right > maxWidth) {
 						clearInterval(inter)
 						document.getElementById("container").removeChild(bullets[i])
@@ -436,9 +615,37 @@ class Bullet {
 		}(plane), 40)
 	}
 }
-
+class Explosie {
+	width;
+	height;
+	img;
+	exTop;
+	exLeft;
+	constructor(width, height, img, exTop, exLeft) {
+		this.width = width;
+		this.height = height;
+		this.img = img;
+		this.exTop = exTop;
+		this.exLeft = exLeft;
+	}
+	explode() {
+		var image = new Image();
+		image.style.position = "fixed";
+		image.src = this.img;
+		image.style.width = this.width + "px";
+		image.style.height = this.height + "px";
+		image.style.top = this.exTop - 25 + "px";
+		image.style.left = this.exLeft - 10 + "px";
+		image.style.zIndex = "5"
+		image.setAttribute("class", "explosie");
+		audioEx.currentTime = 0;
+		audioEx.volume = 0.9;
+		audioEx.play();
+		return image;
+	}
+}
 function connect() {
-	var socket = new SockJS('http://192.168.18.101:8080/websocket', [], {
+	var socket = new SockJS('http://192.168.18.98:8080/websocket', [], {
 		sessionId: () => {
 			var connid = getRandom()
 			sessionId = connid;
@@ -459,14 +666,14 @@ function connect() {
 			var value = message.body;
 			if (player == null) {
 				if (value === "1") {
-					player = "player1";
+					player = "Player1";
 					console.log("Player1")
 					document.getElementsByClassName("loading")[0].style.display = "block"
 					document.getElementById("HoofdContainer").style.display = "none"
 					waitingSound.play();
 					audio.pause();
 				} else {
-					player = "player2"
+					player = "Player2"
 					console.log("Player2")
 				}
 				sendImage();
@@ -479,7 +686,6 @@ function connect() {
 					document.getElementsByClassName("loading")[0].style.display = "none"
 					waitingSound.pause()
 					audio.pause();
-					console.log("test player")
 					var countdown1 = document.getElementById('countdown')
 					countdown1.style.display = "block"
 					document.getElementById("HoofdContainer").style.display = "none"
@@ -495,10 +701,19 @@ function connect() {
 						document.getElementById('plane2').style.display = "block"
 						document.getElementById('plane1').style.display = "block"
 						countdown1.style.display = "none"
-						var theme = new Audio("http://192.168.18.101:8080/sounds/BattleThemeSong.mp3");
+						var theme = new Audio("http://192.168.18.98:8080/sounds/BattleThemeSong.mp3");
 						theme.volume = 0.2;
 						theme.loop = true;
 						theme.play();
+						startTimer();
+						if (player === "Player1") {
+							lifeInterval = setInterval(function() {
+								var winWidth = window.innerWidth;
+								var winHeight = window.innerHeight;
+								var coords = { "width": winWidth, "height": winHeight, "player": player };
+								stompClient.send("/app/plane/lifes", {}, JSON.stringify(coords));
+							}, 15000)
+						}
 						requestAnimationFrame(function() {
 							update()
 						})
@@ -517,13 +732,16 @@ function connect() {
 			for (var i = 0; i < array.length; i++) {
 				var speler;
 				if (array[i].player != player) {
-					if(array[i].player != null){
-					speler = array[i].player.split("r", 2)[1]
+					if (array[i].player != null) {
+						speler = array[i].player.split("r", 2)[1]
 					}
 					if (array[i].username != "") {
 						document.getElementById("plane" + speler + "text").textContent = array[i].username
 						Planes.find(o => o.name === "plane" + speler).nickname = array[i].username;
 
+					}
+					else {
+						document.getElementById("plane" + speler + "text").textContent = "plane" + speler
 					}
 					if (array[i].img != null) {
 						document.getElementById("plane" + speler + "P").src = array[i].img;
@@ -533,8 +751,8 @@ function connect() {
 					}
 				} else {
 					var speler;
-					if(array[i].player != null){
-					speler = array[i].player.split("r", 2)[1]
+					if (array[i].player != null) {
+						speler = array[i].player.split("r", 2)[1]
 					}
 					if (array[i].username != "") {
 						document.getElementById("plane" + speler + "text").textContent = array[i].username
@@ -553,11 +771,43 @@ function connect() {
 			if (coords.id != id) {
 				client2 = coords.id
 				if (coords.y != null && coords.x != null) {
-					document.getElementById("plane1").style.top = coords.y + "%"
-					document.getElementById("plane1").style.left = coords.x + "%"
+					document.getElementById("plane1").style.top = coords.y + "vh"
+					document.getElementById("plane1").style.left = coords.x + "vh"
 
 				}
+				if (coords.vlam != null) {
+					if (coords.vlam === "true") {
+						document.getElementById("plane1F").style.display = "block"
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flames.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flames.gif"
+						}
+					}
+					else if (coords.vlam === "false") {
+						document.getElementById("plane1F").style.display = "none"
+					}
+					else if (coords.vlam === "rechts") {
+						document.getElementById("plane1F").style.display = "block"
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flameRechts.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flameRechts.gif"
 
+						}
+					}
+					else if (coords.vlam === "links") {
+						document.getElementById("plane1F").style.display = "block"
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flameLinks.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flameLinks.gif"
+						}
+					}
+					else if(coords.vlam === "boost"){
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flames3.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flames3.gif"
+						}
+					}
+
+				}
+				else {
+					document.getElementById("plane1F").style.display = "none"
+				}
 				document.getElementById("plane1").style.transform += coords.transform
 				Planes.find(o => o.name === "plane1").saved_moves += coords.transform;
 			}
@@ -569,11 +819,43 @@ function connect() {
 			if (coords.id != id) {
 				client2 = coords.id
 				if (coords.y != null && coords.x != null) {
-					document.getElementById("plane2").style.top = coords.y + "%"
-					document.getElementById("plane2").style.left = coords.x + "%"
+					document.getElementById("plane2").style.top = coords.y + "vh"
+					document.getElementById("plane2").style.left = coords.x + "vh"
 
 				}
+				if (coords.vlam != null) {
+					if (coords.vlam === "true") {
+						document.getElementById("plane2F").style.display = "block"
+						if (!(document.getElementById("plane2F").src === "http://192.168.18.98:8080/images/flames.gif")) {
+							document.getElementById("plane2F").src = "http://192.168.18.98:8080/images/flames.gif"
+						}
+					}
+					else if (coords.vlam === "false") {
+						document.getElementById("plane2F").style.display = "none"
+					}
+					else if (coords.vlam === "rechts") {
+						document.getElementById("plane2F").style.display = "block"
+						if (!(document.getElementById("plane2F").src === "http://192.168.18.98:8080/images/flameRechts.gif")) {
+							document.getElementById("plane2F").src = "http://192.168.18.98:8080/images/flameRechts.gif"
 
+						}
+					}
+					else if (coords.vlam === "links") {
+						document.getElementById("plane2F").style.display = "block"
+						if (!(document.getElementById("plane2F").src === "http://192.168.18.98:8080/images/flameLinks.gif")) {
+							document.getElementById("plane2F").src = "http://192.168.18.98:8080/images/flameLinks.gif"
+						}
+					}
+					else if(coords.vlam === "boost"){
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flames3.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flames3.gif"
+						}
+					}
+
+				}
+				else {
+					document.getElementById("plane2F").style.display = "none"
+				}
 				document.getElementById("plane2").style.transform += coords.transform
 				Planes.find(o => o.name === "plane2").saved_moves += coords.transform;
 			}
@@ -628,16 +910,54 @@ function connect() {
 				}
 			}
 		})
-		stompClient.subscribe('/plane/winner', function(message) {
-			var array = JSON.parse(message.body)
-			if (array.waarde === "true") {
-				if (array.player != player) {
-					wonGame("You've won!");
+		stompClient.subscribe('/plane/spawn', function(coords) {
+			var array = JSON.parse(coords.body);
+
+			spawnLives(array.left, array.top);
+
+		})
+		stompClient.subscribe('/plane/life', function(test) {
+			var array = JSON.parse(test.body);
+			if (array.player != player) {
+				Planes.find(o => o.name === array.plane).levens += 1;
+				if (Planes.find(o => o.name === array.plane).levens >= 50) {
+					Planes.find(o => o.name === array.plane).levens = 50;
 				}
-				if (array.player === player) {
-					wonGame(array.winner + " won!");
-				}
+				document.getElementById("container").removeChild(document.getElementById("life"))
 			}
+		})
+		stompClient.subscribe('/plane/winner', function(message) {
+			clearInterval(lifeInterval)
+			var array = JSON.parse(message.body)
+			var playerNumber;
+			switch (array.plane) {
+				case "plane1":
+					playerNumber = "Player1"
+					break;
+				case "plane2":
+					playerNumber = "Player2"
+					break;
+			}
+
+
+
+
+			if (array.player != player) {
+				wonGame("You've won!");
+				setInterval(function() {
+					party.confetti(document.body);
+				}, 1000);
+
+				var name = userName != "" ? userName : playerNumber;
+				var loser = array.loser
+				var lives = Planes.find(o => o.name === array.plane).levens;
+				var array = { "id": score.id, "name": name, "levens": lives, "time": spelDuur, "loser": loser }
+				stompClient.send("/app/plane/send/hscore", {}, JSON.stringify(array));
+			}
+			if (array.player === player) {
+				wonGame(array.winner + " won!");
+			}
+
 		});
 	});
 }
@@ -651,18 +971,32 @@ function wonGame(text) {
 }
 
 function explosion(speler) {
-	// 	var img = document.createElement("img")
-	// 	img.src = "https://i.ibb.co/pLp7pv6/explosie.gif"
-	// 	img.style.width = 64 + "px";
-	// 	img.style.height = 52 + "px";
-	// 	img.style.position = "fixed";
-	// 	img.style.top = Planes.find(o => o.name === "plane"+plane).planeTop +10 + "%";
-	// 	img.style.left = Planes.find(o => o.name === "plane"+plane).planeLeft + "%";
-	// 	img.transform = Planes.find(o => o.name === "plane"+plane).saved_moves;
-	// 	document.getElementById("body").appendChild(img);
-	// 	setTimeout(function() {
-	// 		document.getElementById("body").removeChild(img);
-	// 	}, 1000)
+	var id;
+	switch (speler) {
+		case "1":
+			id = "2";
+			break;
+		case "2":
+			id = "1";
+			break;
+	}
+
+	var img = new Image();
+	img.src = "http://192.168.18.98:8080/images/explosie.gif"
+	img.style.width = 64 + "px";
+	img.style.height = 52 + "px";
+	img.setAttribute("class", "explosie")
+	img.style.position = "absolute";
+	img.style.top = document.getElementById("plane" + id + "P").getBoundingClientRect().y + "px"
+	img.style.left = document.getElementById("plane" + id + "P").getBoundingClientRect().x + "px"
+	img.style.zIndex = 10;
+	document.getElementById("container").appendChild(img);
+	setTimeout(function() {
+		var explosies = document.getElementsByClassName("explosie");
+		for (var i = 0; i < explosies.length; i++) {
+			document.getElementById("container").removeChild(explosies[i])
+		}
+	}, 1090)
 
 	audioEx.currentTime = 0;
 	audioEx.volume = 0.9;
@@ -720,11 +1054,12 @@ function setConnected(connected) {
 }
 window.onkeyup = function(e) {
 	var kc = e.keyCode;
-
 	if (kc === 16) {
 		e.preventDefault();
 		Keys.shift = false;
-
+	}
+	if (kc === 32) {
+		Keys.space = false;
 	}
 	if (kc === 17) {
 		Keys.ctrl = false;
@@ -738,7 +1073,6 @@ window.onkeyup = function(e) {
 	if (kc === 37) {
 		Keys.left = false;
 	}
-
 };
 
 function load() {
@@ -802,12 +1136,20 @@ var getColorForPercentage = function(pct) {
 	};
 	return 'rgb(' + [color.r, color.g, color.b].join(',') + ')';
 };
-
+function stopTimer() {
+	clearInterval(intrvl);
+}
+function startTimer() {
+	intrvl = setInterval(function() {
+		spelDuur += 1;
+	}, 1000)
+}
 function makePlane() {
-	var plane1 = new Plane(100, 100, "https://i.ibb.co/y8tqg50/Schip.png", "https://i.ibb.co/2dbntvm/flames.gif", "plane1", 50, 20)
+	var plane1 = new Plane(100, 100, "https://i.ibb.co/y8tqg50/Schip.png", "https://i.ibb.co/2dbntvm/flames.gif", "plane1", 30, 21)
 	Planes.push(plane1)
 	Planes.find(o => o.name === "plane1").makePlane();
-	var plane2 = new Plane(100, 100, "https://i.ibb.co/y8tqg50/Schip.png", "https://i.ibb.co/2dbntvm/flames.gif", "plane2", 50, 80)
+	Planes.find(o => o.name === "plane1").makeAstro();
+	var plane2 = new Plane(100, 100, "https://i.ibb.co/y8tqg50/Schip.png", "https://i.ibb.co/2dbntvm/flames.gif", "plane2", 30, 75)
 	Planes.push(plane2)
 	Planes.find(o => o.name === "plane2").makePlane();
 }
@@ -817,14 +1159,14 @@ function parseDecimal(numberVal) {
 }
 
 function update() {
-	if (player === "player1") {
+	if (player === "Player1") {
 		requestAnimationFrame(function() {
 			Planes.find(o => o.name === "plane1").Move()
 		}, 1000);
 	}
-	if (player === "player2") {
+	if (player === "Player2") {
 		requestAnimationFrame(function() {
-			console.log("player2 move")
+			console.log("Player2 move")
 			Planes.find(o => o.name === "plane2").Move()
 
 		}, 1000);
@@ -849,6 +1191,35 @@ function chooseImageBullet(event) {
 	imageChoiceBullet = event.src;
 }
 
+function collide(r1, r2) {
+	var dx = (r1.x + r1.width / 2) - (r2.x + r2.width / 2);
+	var dy = (r1.y + r1.height / 2) - (r2.y + r2.height / 2);
+	var width = (r1.width + r2.width) / 2;
+	var height = (r1.height + r2.height) / 2;
+	var crossWidth = width * dy;
+	var crossHeight = height * dx;
+	var collision = 'none';
+	//
+	if (Math.abs(dx) <= width && Math.abs(dy) <= height) {
+		if (crossWidth > crossHeight) {
+			collision = (crossWidth > (-crossHeight)) ? 'bottom' : 'left';
+		} else {
+			collision = (crossWidth > -(crossHeight)) ? 'right' : 'top';
+		}
+	}
+	return (collision);
+}
+function Collision(a, b) {
+	if (a.x < b.x + b.width &&
+		a.x + a.width > b.x &&
+		a.y < b.y + b.height &&
+		a.y + a.height > b.y) {
+		return true;
+	}
+	return false;
+}
+
+
 function checkCollision(a, b) {
 	return !(
 		((a.y + a.height) < (b.y)) ||
@@ -857,15 +1228,17 @@ function checkCollision(a, b) {
 		(a.x > (b.x + b.width))
 	);
 }
+window.onload = function() {
 
+}
 function fadeIn() {
+
 	document.getElementById('body').style.opacity = "0";
 	var fade = document.getElementById("body");
 	var opacity = 0;
 	var intervalID = setInterval(function() {
-
 		if (opacity < 1) {
-			opacity = opacity + 0.1
+			opacity = opacity + 0.05
 			fade.style.opacity = opacity;
 		} else {
 			clearInterval(intervalID);
@@ -885,7 +1258,93 @@ function login() {
 		TypSound.play();
 	}
 }
+function spawnLives(left, top) {
+	var int1;
+	var int2;
+	var geraakt = false;
+	var img = document.createElement("img")
+	img.src = "http://192.168.18.98:8080/images/life.png"
+	img.style.width = "50px"
+	img.style.height = "50px"
+	img.style.zIndex = 100000;
+	img.style.position = "fixed"
+	img.setAttribute("id", "life")
+	img.style.top = top + "%";
+	img.style.left = left + "%";
+	document.getElementById("container").append(img)
+	if (player === "Player1") {
+		int1 = setInterval(function() {
+			var rakenLife = checkCollision(document.getElementById("plane1").getBoundingClientRect(), img.getBoundingClientRect());
+			if (rakenLife) {
+				geraakt = true;
+				Planes.find(o => o.name === "plane1").levens += 1;
+				if (Planes.find(o => o.name === "plane1").levens >= 50) {
+					Planes.find(o => o.name === "plane1").levens = 50;
+				}
+				document.getElementById("container").removeChild(img)
+				var perc = parseDecimal(Planes.find(o => o.name === "plane1").levens * 2)
+				document.getElementById("score").style.color = getColorForPercentage(perc)
+				document.getElementById("score").innerHTML = Planes.find(o => o.name === "plane1").levens;
+				var array = {
+					"player": player,
+					"plane": "plane1"
+				}
+				stompClient.send('/app/plane/life/add', {}, JSON.stringify(array))
+				clearInterval(int1)
+			}
+		})
+		setTimeout(function() {
+			if (document.getElementById("life") != null) {
+				document.getElementById("container").removeChild(document.getElementById("life"))
+			}
+			if (int1 != null) {
+				clearInterval(int1);
+			}
+			if (int2 != null) {
+				clearInterval(int2);
+			}
+		}, 5000)
+	}
+	if (player === "Player2") {
+		int2 = setInterval(function() {
+			geraakt = true;
+			var rakenLife = checkCollision(document.getElementById("plane2").getBoundingClientRect(), img.getBoundingClientRect());
+			if (rakenLife) {
+				Planes.find(o => o.name === "plane2").levens += 1;
+				if (Planes.find(o => o.name === "plane2").levens >= 50) {
+					Planes.find(o => o.name === "plane2").levens = 50;
+				}
+				document.getElementById("container").removeChild(img)
+				var perc = parseDecimal(Planes.find(o => o.name === "plane2").levens * 2)
+				document.getElementById("score").style.color = getColorForPercentage(perc)
+				document.getElementById("score").innerHTML = Planes.find(o => o.name === "plane2").levens;
+				var array = {
+					"player": player,
+					"plane": "plane2"
+				}
+				stompClient.send('/app/plane/life/add', {}, JSON.stringify(array))
+				clearInterval(int2)
+			}
+		})
+		setTimeout(function() {
+			if (document.getElementById("life") != null) {
+				document.getElementById("container").removeChild(document.getElementById("life"))
+			}
+			if (int1 != null) {
+				clearInterval(int1);
+			}
+			if (int2 != null) {
+				clearInterval(int2);
+			}
+		}, 5000)
+	}
 
+}
+function getRandomNumber(min, max) {
+
+	return Math.random() * (max - min) + min;
+
+}
 function PlaySound(action, event) {
 	if (action === "hover") {
 		var thissound = HoverSound
@@ -893,6 +1352,11 @@ function PlaySound(action, event) {
 	} else if (action === "click") {
 		var thissound = ClickSound
 		thissound.play();
+	}
+	else if (action === "clickH") {
+		var thissound = ClickSound
+		thissound.play();
+		location.href = "http://192.168.18.98:8080/highscores";
 	}
 
 
@@ -930,7 +1394,7 @@ $(function() {
 	// 	$("form").on('submit', function(e) {
 	// 		e.preventDefault();
 	// 	});
-	
+
 	$("#start").click(function() {
 		connect();
 	});

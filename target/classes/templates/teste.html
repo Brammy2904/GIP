@@ -72,14 +72,11 @@ body::-webkit-scrollbar {
 			plane1.style.position = "relative";
 			plane1.setAttribute("id", "plane1")
 			plane1.style.top = 400 + "px";
-			// 			parseInt(document.documentElement.scrollHeight / 2)+ "px";
 			plane1.style.left = 400 + "px"
 			plane1.style.transformOrigin = "center top 0";
-			// 			parseInt(screen.width / 2) + "px";
 			document.getElementById("container").append(plane1)
 			topP = plane1.style.top.slice("p")[0]
 			leftP = plane1.style.left.slice("p")[0];
-
 			var base = document.getElementById('plane1')
 			var rect = base.getBoundingClientRect();
 			animate()
@@ -143,7 +140,9 @@ body::-webkit-scrollbar {
 				for(var i = 0; i < bullets.length; i++){
 					const bounding = bullets[i].getBoundingClientRect();
 
-					if (bounding.top < 0 || bounding.left < 0 || bounding.bottom > (window.innerHeight || document.documentElement.clientHeight) || bounding.right > (window.innerWidth || document.documentElement.clientWidth) ) {
+					if (bounding.top < 0 || bounding.left < 0 || bounding.bottom > (window.innerHeight || 
+						document.documentElement.clientHeight) || bounding.right > (window.innerWidth || 
+						document.documentElement.clientWidth) ) {
 						clearInterval(inter)
 						document.getElementById("container").removeChild(bullets[i])
 						trany = 0;

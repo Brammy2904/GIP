@@ -243,11 +243,18 @@ body::-webkit-scrollbar {
 	transform: translateY(-10px);
 	transition: 0.2s ease-in-out transform;
 }
+.hidden {
+  opacity: 0;
+}
 
+.visible {
+  opacity: 1;
+  transition: opacity 1s ease-out;
+}
 #back {
 	border-radius: 8px;
 	font-size: 24px;
-	position: relative;
+	position: absolute;
 	margin: 0 auto;
 	display: flex;
 	flex-direction: row;
@@ -255,7 +262,8 @@ body::-webkit-scrollbar {
 	width: 150px;
 	display: none;
 	height: 50px;
-	top: 500px;
+	left:45.5%;
+	top: 70%;
 	background-color: #1B37FF;
 }
 

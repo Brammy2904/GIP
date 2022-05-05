@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+ <link th:href="@{/styles/cssandjs/style.css}" rel="stylesheet" />
+ <script type="text/javascript" th:src="@{/js/cssandjs/src.js}"></script>
+</head>
+<body>
+<div id='container'>
+<div id="highest"></div>
+<div class='rowH'>
+<div class='Header'>
+<b id="title">Highscores</b>
+</div>
+</div>
+<br>
+		
+		<br> <input type="text" id="search" oninput="search()"
+			placeholder="search for names..."> <br>
+		<button id="home" class="buttons" onclick="back()">
+			<b>Back</b>
+		</button>
+		<br>
+		<div class='rowH'>
+		<div class='Header'>
+				<b>Place</b>
+			</div>
+			<div class='Header'>
+				<b>Name</b>
+			</div>
+			<div class='Header'>
+				<b>Loser</b>
+			</div>
+			<div class='Header'>
+				<b>Remaining lives</b>
+			</div>
+			<div class="Header">
+				<b>Game duration</b>
+			</div>
+			
+		</div>
+		<div id="highScores"></div>
+	</div>
+</body>
+</html>
