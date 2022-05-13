@@ -44,7 +44,7 @@ public class WebController {
 
 	}
 
-	@MessageMapping("/plane/name")
+	@MessageMapping("/plane/id")
 	@SendTo("/plane/name/test")
 	public Integer name(@RequestBody String test) {
 		if (array.size() >= 2) {
@@ -105,7 +105,7 @@ public class WebController {
 
 	@MessageMapping("/plane/send/hscore")
 	public void HScore(@RequestBody String test) {
-		boolean voegToe = true;
+		boolean voegToe = false;
 		JSONObject obj = new JSONObject(test);
 		HighScores high1 = HscoreRep.findDup(obj.getString("name"));
 		Integer id = null;
@@ -119,17 +119,19 @@ public class WebController {
 			System.out.println("Geen dup");
 		}
 		if (id != null && higher) {
-			HscoreRep.replaceDup(id, obj.getInt("levens"), obj.getString("name"), obj.getInt("time"), obj.getString("loser"));
+			HscoreRep.replaceDup(id, obj.getInt("levens"),
+			obj.getString("name"), obj.getInt("time"), obj.getString("loser"));
 
 		} else {
-		add.initHScore(obj.getInt("levens"), obj.getString("name"),obj.getInt("time"), obj.getString("loser"));
+		add.initHScore(obj.getInt("levens"), 
+		obj.getString("name"),obj.getInt("time"), obj.getString("loser"));
 		}
 		}
 	}
 	@MessageMapping("/plane/lifes")
 	@SendTo("/plane/spawn")
 	public String Lifes(@RequestBody String test) {
-		JSONObject obj = new JSONObject(test);
+//		JSONObject obj = new JSONObject(test);
 	Integer left = new Random().nextInt(10, 90);
 	Integer top = new Random().nextInt(10, 90);
 	JSONObject coordin = new JSONObject();

@@ -1,22 +1,23 @@
 var userName;
 var intrvl;
-var hp = 40;
+var hpNeeded = 40;
 let canvas;
+var timeout;
 var lifeInterval;
 var spelDuur = 0;
-var HoverSound = new Audio("http://192.168.18.98:8080/sounds/buttonHover.wav")
-var ClickSound = new Audio("http://192.168.18.98:8080/sounds/click.wav")
-var audio = new Audio("http://192.168.18.98:8080/sounds/menuSong.mp3");
-var startSound = new Audio("http://192.168.18.98:8080/sounds/countdown.mp3")
-var TypSound = new Audio("http://192.168.18.98:8080/sounds/typSound.mp3")
-var waiting = ["http://192.168.18.98:8080/sounds/waiting.mp3"]
+var HoverSound = new Audio("http://192.168.18.151:8080/sounds/buttonHover.wav")
+var ClickSound = new Audio("http://192.168.18.151:8080/sounds/click.wav")
+var audio = new Audio("http://192.168.18.151:8080/sounds/menuSong.mp3");
+var startSound = new Audio("http://192.168.18.151:8080/sounds/countdown.mp3")
+var TypSound = new Audio("http://192.168.18.151:8080/sounds/typSound.mp3")
+var waiting = ["http://192.168.18.151:8080/sounds/waiting.mp3"]
 //, "https://sndup.net/v2q7/d", "https://sndup.net/tr74/d", "https://sndup.net/frnp/d", "https://sndup.net/q48s/d", "https://sndup.net/k585/d"
 var waitingSound = new Audio(waiting[Math.floor(Math.random() * waiting.length)])
 var winner;
 var loser;
 var stompClient = null;
 var Ids = [];
-var audioEx = new Audio("http://192.168.18.98:8080/sounds/explosie.wav")
+var audioEx = new Audio("http://192.168.18.151:8080/sounds/explosie.wav")
 var imageChoice = null;
 var imageChoiceBullet = null;
 var Planes = [];
@@ -39,8 +40,8 @@ class Plane {
 	speed = 6.0;
 	planeTop;
 	planeLeft;
-	audioShoot = new Audio("http://192.168.18.98:8080/sounds/Blast.mp3");
-	audioBoost = new Audio("http://192.168.18.98:8080/sounds/boost.mp3");
+	audioShoot = new Audio("http://192.168.18.151:8080/sounds/Blast.mp3");
+	audioBoost = new Audio("http://192.168.18.151:8080/sounds/boost.mp3");
 	soundShoot = false;
 	executed = false;
 	nickname;
@@ -170,70 +171,62 @@ class Plane {
 		var rect = plane.getBoundingClientRect();
 		this.saved_moves = document.getElementById(this.name).style.transform;
 		var move = "";
+		var raken1 = collide(rect, document.getElementById("astro").getBoundingClientRect())
 
-		if (Keys.up) {
+		if (raken1 === "bottom") {
+			plane.style.top = parseInt(plane.style.top) + 1 + "%"
+			move = ""
+		}
+		if (raken1 === "left") {
+			plane.style.left = parseInt(plane.style.left) - 1 + "%"
+			move = ""
+		}
+		if (raken1 === "right") {
+			plane.style.left = parseInt(plane.style.left) + 1 + "%"
+			move = ""
+		}
+		if (raken1 === "none") {
+			if (Keys.up) {
 
-			var raken1 = collide(rect, document.getElementById("astro").getBoundingClientRect())
 
-			if (raken1 === "bottom") {
-				plane.style.top = parseInt(plane.style.top) + 1 + "vh"
-				move = ""
-			}
-			if (raken1 === "left") {
-				plane.style.left = parseInt(plane.style.left) - 1 + "vh"
-				move = ""
-			}
-			if (raken1 === "right") {
-				plane.style.left = parseInt(plane.style.left) + 1 + "vh"
-				move = ""
-			}
-			if (raken1 === "none") {
 				if (rect.top <= 0) {
-					plane.style.top = parseInt(plane.style.top) + 1 + "vh"
+					plane.style.top = parseInt(plane.style.top) + 1 + "%"
 				}
 				if (rect.bottom >= maxHeight) {
-					plane.style.top = parseInt(plane.style.top) - 1 + "vh"
+					plane.style.top = parseInt(plane.style.top) - 1 + "%"
 				}
 				if (rect.left <= 0) {
-					plane.style.left = parseInt(plane.style.left) + 1 + "vh"
+					plane.style.left = parseInt(plane.style.left) + 1 + "%"
 				}
 				if (rect.right >= maxWidth) {
-					plane.style.left = parseInt(plane.style.left) - 1 + "vh"
+					plane.style.left = parseInt(plane.style.left) - 1 + "%"
 				} else {
-					this.vlam = "true";
+					if (!Keys.ctrl) {
+						this.vlam = "true";
+					}
+					else if (Keys.ctrl) {
+						this.vlam = "boost"
+						document.getElementById(this.name + "F").style.display = "block"
+					}
 					move = move + ' translateY( -' + Math.round(this.speed) / 10 + 'vh )'
 					if (document.getElementById(this.name + "F").style.display != "block") {
 						document.getElementById(this.name + "F").style.display = "block"
 
 					}
-					if (!(document.getElementById(this.name + "F").src === 'http://192.168.18.98:8080/images/flames.gif') && !Keys.ctrl) {
-						document.getElementById(this.name + "F").src = 'http://192.168.18.98:8080/images/flames.gif'
+					if (!(document.getElementById(this.name + "F").src === 'http://192.168.18.151:8080/images/flames.gif') && !Keys.ctrl) {
+						document.getElementById(this.name + "F").src = 'http://192.168.18.151:8080/images/flames.gif'
 
 					}
 				}
 			}
-		}
-		if (!Keys.up) {
+		
+		if (!Keys.up && !(Keys.space && Keys.left) && !(Keys.space && Keys.right) && !Keys.ctrl) {
 			if (document.getElementById(this.name + "F").style.display != "none") {
 				document.getElementById(this.name + "F").style.display = "none";
 				this.vlam = "false";
 			}
 		}
-		//		if ((!(Keys.space && Keys.left) || !(Keys.space && Keys.right)) && Keys.up) {
-		//			this.vlam = "true";
-		//			if (document.getElementById(this.name + "F").style.display != "block") {
-		//				document.getElementById(this.name + "F").style.display = "block"
-		//
-		//			}
 
-		//			if ((!(Keys.space && Keys.left) && !(Keys.space && Keys.right))) {
-		//				if (this.exec) {
-		//					this.exec = false;
-		//					document.getElementById(this.name + "F").src = 'http://192.168.18.98:8080/images/flames.gif'
-		//				}
-		//			}
-
-		//		}
 		if (Keys.space && Keys.left) {
 			if (rect.top <= 0) {
 				plane.style.top = parseInt(plane.style.top) + 1 + "vh"
@@ -252,8 +245,10 @@ class Plane {
 			}
 			this.vlam = "links";
 			document.getElementById(this.name + "F").style.display = "block";
-			if (!(document.getElementById(this.name + "F").src === 'http://192.168.18.98:8080/images/flameLinks.gif')) {
-				document.getElementById(this.name + "F").src = 'http://192.168.18.98:8080/images/flameLinks.gif'
+			if (!(document.getElementById(this.name + "F").src 
+			=== 'http://192.168.18.151:8080/images/flameLinks.gif')) {
+				document.getElementById(this.name + "F").src = 
+				'http://192.168.18.151:8080/images/flameLinks.gif'
 			}
 
 		}
@@ -276,8 +271,8 @@ class Plane {
 			}
 			this.vlam = "rechts";
 			document.getElementById(this.name + "F").style.display = "block";
-			if (!(document.getElementById(this.name + "F").src === 'http://192.168.18.98:8080/images/flameRechts.gif')) {
-				document.getElementById(this.name + "F").src = 'http://192.168.18.98:8080/images/flameRechts.gif'
+			if (!(document.getElementById(this.name + "F").src === 'http://192.168.18.151:8080/images/flameRechts.gif')) {
+				document.getElementById(this.name + "F").src = 'http://192.168.18.151:8080/images/flameRechts.gif'
 			}
 		}
 		if (Keys.right && !Keys.space) {
@@ -290,9 +285,10 @@ class Plane {
 			this.rotation += ' rotate( -3deg )'
 		}
 		if (Keys.ctrl) {
-
+			document.getElementById(this.name + "F").style.display = "block";
+			this.vlam = "boost"
 			if (!Planes.find(o => o.name === this.name).executed) {
-				this.vlam = "boost"
+
 				Planes.find(o => o.name === this.name).boostDown()
 				if (this.name === "plane1") {
 					var array = {
@@ -305,6 +301,7 @@ class Plane {
 					var array = {
 						"waarde": "true",
 						"id": id
+
 					}
 					stompClient.send("/app/plane/boost/2", {}, JSON.stringify(array))
 				}
@@ -312,6 +309,7 @@ class Plane {
 		}
 
 		if (!Keys.ctrl) {
+//			this.vlam = "false"
 			if (Planes.find(o => o.name === this.name).executed) {
 				clearInterval(Planes.find(o => o.name === this.name).boostInterval)
 				Planes.find(o => o.name === this.name).boostUp()
@@ -319,7 +317,7 @@ class Plane {
 					var array = {
 						"waarde": "false",
 						"id": id
-						
+
 					}
 					stompClient.send("/app/plane/boost/1", {}, JSON.stringify(array))
 				}
@@ -327,11 +325,12 @@ class Plane {
 					var array = {
 						"waarde": "false",
 						"id": id
-						
+
 					}
 					stompClient.send("/app/plane/boost/2", {}, JSON.stringify(array))
 				}
 			}
+		}
 		}
 		if (Keys.shift) {
 			if (this.name === "plane1") {
@@ -400,12 +399,13 @@ class Plane {
 		}
 
 		plane.style.transform += move;
-		var animation = requestAnimationFrame(function(plane) {
+//		var animation = 
+		requestAnimationFrame(function(plane) {
 			return function() {
 				Planes.find(o => o.name === plane.name).Move()
 			};
 		}(this));
-
+//		animation()
 	}
 	Fire(speler) {
 		if (imageChoiceBullet == null) {
@@ -426,7 +426,7 @@ class Plane {
 		var raken = checkCollision(bounding, document.getElementById("astro").getBoundingClientRect())
 		if (raken) {
 			if (player.split("r")[1] === this.name.split("e")[1]) {
-				var sound = new Audio('http://192.168.18.98:8080/sounds/hitWall.mp3')
+				var sound = new Audio('http://192.168.18.151:8080/sounds/hitWall.mp3')
 				sound.volume = 0.9;
 				sound.play();
 			}
@@ -440,7 +440,16 @@ class Plane {
 			var vliegtuig = document.getElementById("plane2").getBoundingClientRect();
 			var rakenPlane = checkCollision(bounding, vliegtuig);
 			if (rakenPlane) {
-				document.getElementById("container").append(new Explosie(106, 176, "http://192.168.18.98:8080/images/expl.gif", document.getElementById("plane2").getBoundingClientRect().y, document.getElementById("plane2").getBoundingClientRect().x).explode())
+				if (document.getElementsByClassName("explosie")[0] != null) {
+					var elems = Array.from(document.getElementsByClassName("explosie"));
+					elems.forEach(div => {
+						div.remove();
+					})
+				}
+				document.getElementById("container").append(new Explosie(106, 176,
+					"http://192.168.18.151:8080/images/expl.gif",
+					document.getElementById("plane2").getBoundingClientRect().y,
+					document.getElementById("plane2").getBoundingClientRect().x).explode())
 				setTimeout(function() {
 					var explosies = document.getElementsByClassName("explosie");
 					for (var i = 0; i < explosies.length; i++) {
@@ -453,16 +462,15 @@ class Plane {
 					var perc = parseDecimal(Planes.find(o => o.name === "plane2").levens * 2)
 					document.getElementById("score").style.color = getColorForPercentage(perc)
 					document.getElementById("score").innerHTML = Planes.find(o => o.name === "plane2").levens;
-					if (Planes.find(o => o.name === "plane2").levens === hp) {
+					if (Planes.find(o => o.name === "plane2").levens === hpNeeded) {
 						Planes.find(o => o.name === "plane2").levens = 0;
 						if (Planes.find(o => o.name === "plane1").nickname != null) {
 							winner = Planes.find(o => o.name === "plane1").nickname
-
-
 						} else {
 							winner = "Player1";
 						}
-						loser = Planes.find(o => o.name === "plane2").nickname != null ? Planes.find(o => o.name === "plane2").nickname : "Player2"
+						loser = Planes.find(o => o.name === "plane2").nickname
+						 != null ? Planes.find(o => o.name === "plane2").nickname : "Player2"
 						var array = {
 							"player": player,
 							"winner": winner,
@@ -491,7 +499,10 @@ class Plane {
 						div.remove();
 					})
 				}
-				document.getElementById("container").append(new Explosie(106, 176, "http://192.168.18.98:8080/images/expl.gif", document.getElementById("plane1").getBoundingClientRect().y, document.getElementById("plane1").getBoundingClientRect().x).explode())
+				document.getElementById("container").append(new Explosie(106, 176,
+					"http://192.168.18.151:8080/images/expl.gif",
+					document.getElementById("plane1").getBoundingClientRect().y,
+					document.getElementById("plane1").getBoundingClientRect().x).explode())
 				setTimeout(function() {
 					var explosies = document.getElementsByClassName("explosie");
 					for (var i = 0; i < explosies.length; i++) {
@@ -504,7 +515,7 @@ class Plane {
 					var perc = parseDecimal(Planes.find(o => o.name === "plane1").levens * 2)
 					document.getElementById("score").style.color = getColorForPercentage(perc)
 					document.getElementById("score").innerHTML = Planes.find(o => o.name === "plane1").levens;
-					if (Planes.find(o => o.name === "plane1").levens === hp) {
+					if (Planes.find(o => o.name === "plane1").levens === hpNeeded) {
 						Planes.find(o => o.name === "plane1").levens = 0;
 						if (Planes.find(o => o.name === "plane2").nickname != null) {
 							winner = Planes.find(o => o.name === "plane2").nickname
@@ -534,7 +545,7 @@ class Plane {
 	makeAstro() {
 		var image = new Image();
 		image.crossOrigin = "Anonymous";
-		image.src = 'http://192.168.18.98:8080/images/wall.png'
+		image.src = 'http://192.168.18.151:8080/images/wall.png'
 		image.style.position = "fixed"
 		image.setAttribute("id", "astro")
 		image.style.width = 10 + "%"
@@ -588,12 +599,24 @@ class Bullet {
 		bullet.setAttribute("class", "bullet" + planeId)
 		bullet.setAttribute("id", "bullet" + planeId)
 		bullet.style.zIndex = "0"
-		if (plane.name === "plane1") {
-			bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 4 + "%";
-		} else {
-			bullet.style.top = parseInt(document.getElementById(plane.name).style.top) +4 + "%";
+		if (window.innerWidth < 1000) {
+			if (plane.name === "plane1") {
+				bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 4 + "%";
+				bullet.style.left = parseInt(document.getElementById(plane.name).style.left) + 5 + "%"
+			} else {
+				bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 7 + "%";
+				bullet.style.left = parseInt(document.getElementById(plane.name).style.left) + 4 + "%"
+			}
 		}
-		bullet.style.left = parseInt(document.getElementById(plane.name).style.left) + 4 + "%"
+		else {
+			if (plane.name === "plane1") {
+				bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 4 + "%";
+				bullet.style.left = parseInt(document.getElementById(plane.name).style.left) + 3 + "%"
+			} else {
+				bullet.style.top = parseInt(document.getElementById(plane.name).style.top) + 5 + "%";
+				bullet.style.left = parseInt(document.getElementById(plane.name).style.left) + 2 + "%"
+			}
+		}
 		bullet.style.transform = saved;
 		document.getElementById("container").append(bullet)
 		var inter = setInterval(function(plane) {
@@ -645,7 +668,7 @@ class Explosie {
 	}
 }
 function connect() {
-	var socket = new SockJS('http://192.168.18.98:8080/websocket', [], {
+	var socket = new SockJS('http://192.168.18.151:8080/websocket', [], {
 		sessionId: () => {
 			var connid = getRandom()
 			sessionId = connid;
@@ -661,8 +684,8 @@ function connect() {
 	stompClient.connect('', '', function() {
 		var sesid = socket._transport.url.split("/", 6)[5]
 		id = sesid;
-		stompClient.send('/app/plane/name', {}, id)
-		stompClient.subscribe('/plane/name/test', function(message) {
+		stompClient.send('/app/plane/id', {}, id)
+		var start = stompClient.subscribe('/plane/name/test', function(message) {
 			var value = message.body;
 			if (player == null) {
 				if (value === "1") {
@@ -695,13 +718,13 @@ function connect() {
 						countD--
 						countdown1.innerHTML = "Game starts in " + countD;
 					}, 1000)
-					setTimeout(function() {
+					timeout = setTimeout(function() {
 						clearInterval(inter)
 						setConnected("none");
 						document.getElementById('plane2').style.display = "block"
 						document.getElementById('plane1').style.display = "block"
 						countdown1.style.display = "none"
-						var theme = new Audio("http://192.168.18.98:8080/sounds/BattleThemeSong.mp3");
+						var theme = new Audio("http://192.168.18.151:8080/sounds/BattleThemeSong.mp3");
 						theme.volume = 0.2;
 						theme.loop = true;
 						theme.play();
@@ -771,15 +794,15 @@ function connect() {
 			if (coords.id != id) {
 				client2 = coords.id
 				if (coords.y != null && coords.x != null) {
-					document.getElementById("plane1").style.top = coords.y + "vh"
-					document.getElementById("plane1").style.left = coords.x + "vh"
+					document.getElementById("plane1").style.top = coords.y + "%"
+					document.getElementById("plane1").style.left = coords.x + "%"
 
 				}
 				if (coords.vlam != null) {
 					if (coords.vlam === "true") {
 						document.getElementById("plane1F").style.display = "block"
-						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flames.gif")) {
-							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flames.gif"
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.151:8080/images/flames.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.151:8080/images/flames.gif"
 						}
 					}
 					else if (coords.vlam === "false") {
@@ -787,27 +810,28 @@ function connect() {
 					}
 					else if (coords.vlam === "rechts") {
 						document.getElementById("plane1F").style.display = "block"
-						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flameRechts.gif")) {
-							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flameRechts.gif"
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.151:8080/images/flameRechts.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.151:8080/images/flameRechts.gif"
 
 						}
 					}
 					else if (coords.vlam === "links") {
 						document.getElementById("plane1F").style.display = "block"
-						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flameLinks.gif")) {
-							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flameLinks.gif"
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.151:8080/images/flameLinks.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.151:8080/images/flameLinks.gif"
 						}
 					}
-					else if(coords.vlam === "boost"){
-						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flames3.gif")) {
-							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flames3.gif"
+					else if (coords.vlam === "boost") {
+						document.getElementById("plane1F").style.display = "block"
+						if (!(document.getElementById("plane1F").src === "http://192.168.18.151:8080/images/flames3.gif")) {
+							document.getElementById("plane1F").src = "http://192.168.18.151:8080/images/flames3.gif"
 						}
 					}
 
 				}
-				else {
-					document.getElementById("plane1F").style.display = "none"
-				}
+//				else {
+//					document.getElementById("plane1F").style.display = "none"
+//				}
 				document.getElementById("plane1").style.transform += coords.transform
 				Planes.find(o => o.name === "plane1").saved_moves += coords.transform;
 			}
@@ -819,15 +843,15 @@ function connect() {
 			if (coords.id != id) {
 				client2 = coords.id
 				if (coords.y != null && coords.x != null) {
-					document.getElementById("plane2").style.top = coords.y + "vh"
-					document.getElementById("plane2").style.left = coords.x + "vh"
+					document.getElementById("plane2").style.top = coords.y + "%"
+					document.getElementById("plane2").style.left = coords.x + "%"
 
 				}
 				if (coords.vlam != null) {
 					if (coords.vlam === "true") {
 						document.getElementById("plane2F").style.display = "block"
-						if (!(document.getElementById("plane2F").src === "http://192.168.18.98:8080/images/flames.gif")) {
-							document.getElementById("plane2F").src = "http://192.168.18.98:8080/images/flames.gif"
+						if (!(document.getElementById("plane2F").src === "http://192.168.18.151:8080/images/flames.gif")) {
+							document.getElementById("plane2F").src = "http://192.168.18.151:8080/images/flames.gif"
 						}
 					}
 					else if (coords.vlam === "false") {
@@ -835,20 +859,21 @@ function connect() {
 					}
 					else if (coords.vlam === "rechts") {
 						document.getElementById("plane2F").style.display = "block"
-						if (!(document.getElementById("plane2F").src === "http://192.168.18.98:8080/images/flameRechts.gif")) {
-							document.getElementById("plane2F").src = "http://192.168.18.98:8080/images/flameRechts.gif"
+						if (!(document.getElementById("plane2F").src === "http://192.168.18.151:8080/images/flameRechts.gif")) {
+							document.getElementById("plane2F").src = "http://192.168.18.151:8080/images/flameRechts.gif"
 
 						}
 					}
 					else if (coords.vlam === "links") {
 						document.getElementById("plane2F").style.display = "block"
-						if (!(document.getElementById("plane2F").src === "http://192.168.18.98:8080/images/flameLinks.gif")) {
-							document.getElementById("plane2F").src = "http://192.168.18.98:8080/images/flameLinks.gif"
+						if (!(document.getElementById("plane2F").src === "http://192.168.18.151:8080/images/flameLinks.gif")) {
+							document.getElementById("plane2F").src = "http://192.168.18.151:8080/images/flameLinks.gif"
 						}
 					}
-					else if(coords.vlam === "boost"){
-						if (!(document.getElementById("plane1F").src === "http://192.168.18.98:8080/images/flames3.gif")) {
-							document.getElementById("plane1F").src = "http://192.168.18.98:8080/images/flames3.gif"
+					else if (coords.vlam === "boost") {
+						document.getElementById("plane2F").style.display = "block"
+						if (!(document.getElementById("plane2F").src === "http://192.168.18.151:8080/images/flames3.gif")) {
+							document.getElementById("plane2F").src = "http://192.168.18.151:8080/images/flames3.gif"
 						}
 					}
 
@@ -926,36 +951,39 @@ function connect() {
 				document.getElementById("container").removeChild(document.getElementById("life"))
 			}
 		})
+		stompClient.subscribe('/plane/disconnect', function(test){
+			if(test.body === "true"){
+				clearInterval(lifeInterval)
+				setInterval(function() {
+					party.confetti(document.body);
+				}, 1000);
+			wonGame("You've won! (forfeit)")
+			document.getElementById('countdown').style.display = "none"
+			clearTimeout(timeout)
+			startSound.pause();
+			stompClient.disconnect();
+			}
+		})
 		stompClient.subscribe('/plane/winner', function(message) {
 			clearInterval(lifeInterval)
 			var array = JSON.parse(message.body)
-			var playerNumber;
-			switch (array.plane) {
-				case "plane1":
-					playerNumber = "Player1"
-					break;
-				case "plane2":
-					playerNumber = "Player2"
-					break;
-			}
-
-
-
-
 			if (array.player != player) {
 				wonGame("You've won!");
 				setInterval(function() {
 					party.confetti(document.body);
 				}, 1000);
-
-				var name = userName != "" ? userName : playerNumber;
+			
+				var name = userName != "" ? userName : array.winner;
 				var loser = array.loser
 				var lives = Planes.find(o => o.name === array.plane).levens;
-				var array = { "id": score.id, "name": name, "levens": lives, "time": spelDuur, "loser": loser }
+				var array = { "id": score.id, "name": name,
+				 "levens": lives, "time": spelDuur, "loser": loser }
 				stompClient.send("/app/plane/send/hscore", {}, JSON.stringify(array));
+				stompClient.disconnect();
 			}
 			if (array.player === player) {
 				wonGame(array.winner + " won!");
+				stompClient.disconnect();
 			}
 
 		});
@@ -968,6 +996,7 @@ function wonGame(text) {
 	document.getElementById("endScreen").style.display = "block"
 	document.body.style.backgroundImage = '';
 	document.getElementById("zin").innerHTML = text;
+
 }
 
 function explosion(speler) {
@@ -980,9 +1009,8 @@ function explosion(speler) {
 			id = "1";
 			break;
 	}
-
 	var img = new Image();
-	img.src = "http://192.168.18.98:8080/images/explosie.gif"
+	img.src = "http://192.168.18.151:8080/images/explosie.gif"
 	img.style.width = 64 + "px";
 	img.style.height = 52 + "px";
 	img.setAttribute("class", "explosie")
@@ -1210,10 +1238,10 @@ function collide(r1, r2) {
 	return (collision);
 }
 function Collision(a, b) {
-	if (a.x < b.x + b.width &&
-		a.x + a.width > b.x &&
-		a.y < b.y + b.height &&
-		a.y + a.height > b.y) {
+	if (a.x <= b.x + b.width &&
+		a.x + a.width >= b.x &&
+		a.y <= b.y + b.height &&
+		a.y + a.height >= b.y) {
 		return true;
 	}
 	return false;
@@ -1263,7 +1291,7 @@ function spawnLives(left, top) {
 	var int2;
 	var geraakt = false;
 	var img = document.createElement("img")
-	img.src = "http://192.168.18.98:8080/images/life.png"
+	img.src = "http://192.168.18.151:8080/images/life.png"
 	img.style.width = "50px"
 	img.style.height = "50px"
 	img.style.zIndex = 100000;
@@ -1274,7 +1302,8 @@ function spawnLives(left, top) {
 	document.getElementById("container").append(img)
 	if (player === "Player1") {
 		int1 = setInterval(function() {
-			var rakenLife = checkCollision(document.getElementById("plane1").getBoundingClientRect(), img.getBoundingClientRect());
+			var rakenLife = checkCollision(document.getElementById("plane1").getBoundingClientRect(),
+				img.getBoundingClientRect());
 			if (rakenLife) {
 				geraakt = true;
 				Planes.find(o => o.name === "plane1").levens += 1;
@@ -1349,32 +1378,59 @@ function PlaySound(action, event) {
 	if (action === "hover") {
 		var thissound = HoverSound
 		thissound.play();
-	} else if (action === "click") {
+		event.target.style.transform = 'rotate(360deg)';
+	event.target.style.transform = 'scale(1.06)';
+	} 
+	if(action == null){
+		event.target.style.transform = 'rotate(360deg)';
+	event.target.style.transform = 'scale(1.06)';
+	}
+	else if (action === "hoverB") {
+		var thissound = HoverSound
+		thissound.play();
+	event.target.style.transform = 'translate( -50%, -70%) rotate(360deg)';
+	event.target.style.transform = 'translate( -50%, -70%) scale(1.06)';
+	}
+	else if (action === "click") {
 		var thissound = ClickSound
 		thissound.play();
+		event.target.style.transform = 'rotate(360deg)';
+	event.target.style.transform = 'scale(1.06)';
+	}
+	else if (action === "clickB") {
+		var thissound = ClickSound
+		thissound.play();
+	event.target.style.transform = 'translate( -50%, -70%) rotate(360deg)';
+	event.target.style.transform = 'translate( -50%, -70%) scale(1.06)';
 	}
 	else if (action === "clickH") {
 		var thissound = ClickSound
 		thissound.play();
-		location.href = "http://192.168.18.98:8080/highscores";
+		location.href = "http://192.168.18.151:8080/highscores";
+		event.target.style.transform = 'rotate(360deg)';
+	event.target.style.transform = 'scale(1.06)';
 	}
 
 
-	event.target.style.transform = 'rotate(360deg)';
-	event.target.style.transform = 'scale(1.06)';
+	
 }
 
-function StopSound(event) {
+function StopSound(back, event) {
+	if(back != ""){
+	event.target.style.transform = 'translate( -50%, -70%) scale(1)';
+	}
+	else{
+			event.target.style.transform = 'scale(1)';
+	}
 	var thissound = HoverSound
 	thissound.pause();
 	thissound.currentTime = 0;
-	event.target.style.transform = 'scale(1)';
+	
 }
 
 function fpsMeter() {
 	let prevTime = Date.now(),
 		frames = 0;
-
 	requestAnimationFrame(function loop() {
 		const time = Date.now();
 		frames++;

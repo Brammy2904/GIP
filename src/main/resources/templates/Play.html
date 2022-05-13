@@ -17,16 +17,18 @@
    </head>
    <body id="body">
       <div id="HoofdContainer" style="color: white">
-         <button class="buttons" onclick="login()" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)" id="login">Login</button>
+         <button class="buttons" onclick="login()" onmouseover="PlaySound('hover', event)" onmouseout="StopSound('',event)" id="login">Login</button>
          <div id="menu" style="display:none">
-            <img id="image" src="http://192.168.18.98:8080/images/logo.png">
-            <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)" id="start">Start
+            <img id="image" src="http://192.168.18.151:8080/images/background2.png">
+            <br>
+            <br>
+            <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound('',event)" id="start">Start
             Game</button>
             <br>
-            <button class="buttons" onclick="PlaySound('clickH',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)"
+            <button class="buttons" onclick="PlaySound('clickH',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound('',event)"
                id="highscore">Highscores</button>
                <br>
-            <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)"
+            <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound('',event)"
                id="settings">Settings</button>
             <br>
              
@@ -40,59 +42,59 @@
          </div>
          <div id="setting">
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/ship.png" alt="Blue">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/ship.png" alt="Blue">
                <figcaption>Blue</figcaption>
             </figure>
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/ship_Red.png" alt="Red">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/ship_Red.png" alt="Red">
                <figcaption>Red</figcaption>
             </figure>
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/ship_Green.png" alt="Green">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/ship_Green.png" alt="Green">
                <figcaption>Green</figcaption>
             </figure>
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/ship_purple.png" alt="Purple">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/ship_purple.png" alt="Purple">
                <figcaption>Purple</figcaption>
             </figure>
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/ship_Yellow.png" alt="Yellow">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/ship_Yellow.png" alt="Yellow">
                <figcaption>Yellow</figcaption>
             </figure>
          </div>
          <div id="setting1">
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/blast_Blue.png"  alt="Blue">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/blast_Blue.png"  alt="Blue">
                <figcaption>Blue</figcaption>
             </figure>
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/blast_Red.png" alt="Red">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/blast_Red.png" alt="Red">
                <figcaption>Red</figcaption>
             </figure>
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/blast_Green.png" alt="Green">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/blast_Green.png" alt="Green">
                <figcaption>Green</figcaption>
             </figure>
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/blast_purple.png" alt="Purple">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/blast_purple.png" alt="Purple">
                <figcaption>Purple</figcaption>
             </figure>
             <figure onclick="PlaySound('click',event)">
-               <img onclick="chooseImageBullet(event.target)"  onmouseover="PlaySound(null, event)" onmouseout="StopSound(event)" class="images"
-                  src="http://192.168.18.98:8080/images/blast_Yellow.png" alt="Yellow">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.151:8080/images/blast_Yellow.png" alt="Yellow">
                <figcaption>Yellow</figcaption>
             </figure>
          </div>
-         <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound(event)" id="back">Back</button>
+         <button class="buttons" onclick="PlaySound('clickB',event)" onmouseover="PlaySound('hoverB', event)" onmouseout="StopSound('back', event)" id="back">Back</button>
       </div>
       <div id="container"></div>
       <p class="loading">Waiting for other player to connect</p>
@@ -153,7 +155,7 @@
                <a href="#" onclick="window.location.reload(true)"> YES </a>
             </div>
             <div class="no">
-               <a href="http://192.168.18.98:8080/End"> NO </a>
+               <a href="http://192.168.18.151:8080/End"> NO </a>
             </div>
          </div>
       </div>

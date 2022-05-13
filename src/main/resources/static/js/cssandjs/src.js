@@ -2,9 +2,9 @@ var array = [];
 var count = 0;
 window.onload = function() {
 	var image = document.createElement("img")
-	image.src = "http://192.168.18.98:8080/images/logo.png";
-	image.style.width = 120 + "px"
-	image.style.height = 120 + "px";
+	image.src = "http://192.168.18.151:8080/images/background2.png";
+	image.style.width = 192 + "px"
+	image.style.height = 161 + "px";
 	image.setAttribute("class", "logo")
 	document.body.append(image)
 	getHighScores()
@@ -18,7 +18,7 @@ function search() {
 		getHighScores()
 
 	} else {
-		axios.get('http://192.168.18.98:8080/getHighScore?name=' + searchText).then(async function(response) {
+		axios.get('http://192.168.18.151:8080/getHighScore?name=' + searchText).then(async function(response) {
 			if (response.data.length === 0) {
 
 				var row = document.createElement("div")
@@ -28,6 +28,7 @@ function search() {
 				var b2 = document.createElement("B");
 				var t2 = document.createTextNode("No results found...");
 				b2.append(t2)
+				b2.style.color = "white"
 
 				column1.append(b2)
 				row.append(column1)
@@ -116,7 +117,7 @@ function search() {
 }
 function getHighScores() {
 	document.getElementById("highScores").style.display = "none";
-	axios.get('http://192.168.18.98:8080/highscore')
+	axios.get('http://192.168.18.151:8080/highscore')
 		.then(function(response) {
 			for (score of response.data) {
 				count++;
@@ -188,7 +189,7 @@ function getHighScores() {
 		})
 }
 function back() {
-	location.href = "http://192.168.18.98:8080/start"
+	location.href = "http://192.168.18.151:8080/start"
 }
 function getRandomColor() {
 	var letters = '0123456789ABCDEF'.split('');
