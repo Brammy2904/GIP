@@ -33,14 +33,16 @@ Er gaan zeker nog meerdere dingen volgen, dus zeker niet getreurd.
 # Screenshots
 
 ## Start Menu
-![App Screenshot](https://i.postimg.cc/D0ND98MN/versie-2-Start-menu.png)
+![App Screenshot](https://iili.io/W8J7gR.png)
 ## Settings
 ![App Screenshot](https://i.postimg.cc/XJVTdM5s/verise-2-settings.png)
 ## Lobby
 ![App Screenshot](https://i.postimg.cc/900KgGJT/Versie-2-lobby.png)
 ## Teller voor het spel begint
-![App Screenshot](https://i.postimg.cc/xCtBPsyn/Versie-2-countdown.png)
+![App Screenshot](https://iili.io/W8dzYl.png)
 ## Het echte spel.
-![App Screenshot](https://i.postimg.cc/h4ZHz5t0/Versie-2-spel.png)
+![App Screenshot](https://iili.io/W8J3ib.md.png)
+## winnaar scherm
+![App Screenshot](https://iili.io/W8dIv2.png)
 ## Highscores
 ![App Screenshot](https://i.ibb.co/s3kqLtR/Versie-3-Highscores.png)
