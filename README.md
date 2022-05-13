@@ -70,6 +70,10 @@ pas de eerste lijn zo aan:
 - Verander localhost in je connection naam
 - verander 3306 met je poort van je connection (staat naast je connection naam)
 - en de naam achter de "/" verander je naar jouw database naam.
+## Pas de afbeeldingen aan
+* Open Play.html onder de templates map
+* Ga naar een afbeelding en selecteer het ip-adres van de afbeelding link
+* Druk op ctrl+h -> replace -> vul je eigen ip-adres in
 ## start de Spring server
 * open Application.java in de map helloWorld
 * Rechter muisklik -> run as -> Java Application
