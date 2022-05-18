@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<style>
+*{
+	box-sizing:border-box;
+}
+
+body{
+	padding:0;
+	margin:0;
+	overflow:hidden;
+}
+
+.map{
+	background:url('https://steamcdn-a.akamaihd.net/steamcommunity/public/images/items/396750/5af501ecf17a2a37671115b7a50dcd17c4342793.jpg');
+	height:2200px;
+	width:2200px;
+}
+
+.screen{
+	position:relative;
+	width:100vw;
+	height:100vh;
+	border:3px solid red;
+}
+
+.player{
+	position:absolute;
+	top:50%;
+	left:50%;
+	transform:translate(-50%,-50%);
+}
+
+.player img{
+	height:150px;
+	width:auto;
+}
+
+</style>
+
+<script>
+var mouseX = 0, mouseY = 0;
+document.addEventListener("mousemove",function(event) {
+    mouseX = event.pageX;
+    mouseY = event.pageY;
+});
+
+window.onload = function(){
+    var map = document.getElementsByClassName("map")[0];
+    var player = document.getElementsByClassName('player')[0];
+    var rect = player.getBoundingClientRect();
+    var centerPlayerX = rect.left + player.style.width / 2;
+    var centerPlayerY = rect.top + player.style.height / 2;
+    var speed = 1;
+
+    var movingInterval;
+    document.getElementsByClassName('map')[0].addEventListener('mousedown', function(event){
+    		movingInterval = setInterval(function(){
+	        var clickedPosX = mouseX,
+	            clickedPosY = mouseY;
+
+	        var currentMapPositionX = map.style.left.replace('px', '');
+	        var currentMapPositionY =map.style.top.replace('px', '');
+    var distanceX = clickedPosX - centerPlayerX;
+    var distanceY = clickedPosY - centerPlayerY;
+
+    var magnitude = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+    var deltaX = distanceX * speed / magnitude;
+    var deltaY = distanceY * speed / magnitude;
+
+    var moveMapX = currentMapPositionX - deltaX;
+    var moveMapY = currentMapPositionY - deltaY;
+    document.getElementsByClassName('ship')[0].style.left= moveMapX+"px"
+    document.getElementsByClassName('ship')[0].style.top = moveMapY+"px";
+
+	        var angle = getDirection(centerPlayerX, clickedPosY, clickedPosX, centerPlayerY);
+	        document.querySelector('.ship').style.transform = 'rotate('+angle+'deg)';
+    		}, 10);
+    })
+    document.addEventListener('mouseup', function() {
+		   clearInterval(movingInterval);
+		});
+};
+
+function getDirection(x1, y1, x2, y2){
+  var dx = x2 - x1;
+  var dy = y2 - y1;
+
+  return Math.atan2(dx,  dy) / Math.PI * 180;
+}
+</script>
+</head>
+<body>
+  <div class="map">		
+    <div class="screen">
+      <div class="player">
+        <img class="ship" src="https://i.pinimg.com/originals/66/2d/a8/662da8c01fc846bebd15ba27b75816f8.png">
+      </div>
+    </div>
+  </div>
+  
+</body>
+</html>

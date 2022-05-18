@@ -1,0 +1,149 @@
+@import url('http://fonts.cdnfonts.com/css/gotham');
+
+html, body {
+	font-size: 20px;
+	margin: 0; /* remove default margin */
+	padding: 0; /* remove default padding */
+	width: 100%; /* take full browser width */
+	height: 100%; /* take full browser height*/
+	overflow-x: hidden;
+	background-image:
+		url('https://media.istockphoto.com/vectors/cartoon-moon-surface-landscape-background-vector-id1144328145?k=20&m=1144328145&s=170667a&w=0&h=vM_r94ZZATBeDCYbEPGzs9c9VF3HHBZXVYMezQo0Ick=');
+	background-size: contain;
+	font-family: 'Gotham Medium', sans-serif;
+}
+
+body::-webkit-scrollbar {
+	display: none;
+}
+
+#container {
+	margin: 15px;
+	position: relative;
+	width: 100%;
+	/* 	height:100%; */
+}
+
+.row {
+	display: table;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 70%;
+	height: 50px;
+	border-radius: 30px;
+	border-bottom: 2px solid #66FF66;
+	background-color: black;
+	color: white;
+}
+
+.rowN {
+	display: table;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 70%;
+	height: 180px;
+	border-radius: 30px;
+}
+
+.rowH {
+	display: table;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 70%;
+	height: 50px;
+}
+
+.column {
+	display: flex;
+	flex-direction: column;
+	flex-basis: 80%;
+	flex: 1;
+}
+
+.row:hover, .row:active {
+	 background-image: none;
+	box-shadow: 0 0 20px #ffffff;
+	background: none #6b82ff !important;
+}
+
+.column {
+	display: flex;
+	flex-direction: column;
+	flex-basis: 100%;
+	flex: 1;
+	justify-content: center; /* align horizontal */
+	align-items: center;
+}
+
+.Header {
+	justify-content: center; /* align horizontal */
+	align-items: center;
+	height: 50px;
+	display: flex;
+	flex-direction: column;
+	flex-basis: 100%;
+	flex: 1;
+	color: white;;
+	font-size: 24px;
+}
+
+.logo {
+	position: fixed;
+	top: 0;
+	left: 4%;
+}
+
+#title {
+	font-size: 38px;
+}
+
+.buttons {
+	width: 110px;
+	height: 25px;
+	background: black;
+	color: white;
+	border-radius: 8px;
+	display: table;
+	margin: 0 auto;
+	display: flex;
+	cursor: pointer;
+	flex-direction: row;
+	flex-wrap: wrap;
+	border: solid 1px #82CFD0;
+}
+
+.buttons>b {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#search {
+	background: black;
+	color: white;
+	position: relative;
+	display: table;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 60%;
+	height: 25px;
+	border-radius: 8px;
+	font-size: 24px;
+	border: 1px solid white;
+}
+
+@media screen and (max-width: 992px) {
+	#container {
+		width: 110%;
+	}
+	.row, .rowH {
+		width: 70%;
+	}
+}

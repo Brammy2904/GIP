@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Don't click the button</title>
+  
+    <style>
+    body {
+    overflow:hidden;
+    background-image: url('https://i.pinimg.com/originals/df/f5/d1/dff5d11c4d858970f5c3710df74c62a9.jpg');
+    background-size: cover;
+    }
+    #button {
+  background-color: bisque;
+  position:absolute;
+  padding: 30px 60px;
+  font-size: 35px;
+  border-radius: 10px;
+  border: 5px solid black;
+   -webkit-animation: moveX 4s linear 0s infinite alternate, moveY 3.4s linear 0s infinite alternate;
+  -moz-animation: moveX 4s linear 0s infinite alternate, moveY 3.4s linear 0s infinite alternate;
+  -o-animation: moveX 4s linear 0s infinite alternate, moveY 3.4s linear 0s infinite alternate;
+  animation: moveX 4s linear 0s infinite alternate, moveY 3.4s linear 0s infinite alternate;
+}
+@-webkit-keyframes moveX {
+  from { left: 0; } to { left: 74%; }
+}
+@-moz-keyframes moveX {
+  from { left: 0; } to { left: 74%; }
+}
+@-o-keyframes moveX {
+  from { left: 0; } to { left: 74%; }
+}
+@keyframes moveX {
+  from { left: 0; } to { left:74%; }
+}
+
+@-webkit-keyframes moveY {
+  from { top: 0; } to { top: 85%; }
+}
+@-moz-keyframes moveY {
+  from { top: 0; } to { top: 85%; }
+}
+@-o-keyframes moveY {
+  from { top: 0; } to { top: 85%; }
+}
+@keyframes moveY {
+  from { top: 0; } to { top: 85%; }
+}
+#button:hover {
+  background-color: aquamarine;
+  cursor: pointer;
+}
+
+#title {
+  text-align: center;
+}
+
+.everything {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+    </style>
+  </head>
+  <body>
+    <div class="everything">
+      <button id="button">Don’t click me!!!!</button>
+      <audio controls hidden id="song">
+        <source src="http://192.168.18.72:8080/sounds/RickRoll.mp4" type="audio/mpeg">
+      </audio>
+    </div>
+      <script>
+    document.getElementById("button").addEventListener("click", function() {
+    	  // Change background to dancing rick
+    	  document.body.style.backgroundImage = "url('http://192.168.18.72:8080/images/rick.gif')"
+    		  document.body.style.backgroundSize = "auto";
+
+    	  // Hide the heading and the button
+    	  document.querySelector(".everything").style.display = "none"
+
+    	  // Play song
+    	  var song = document.getElementById("song")
+    	  song.play()
+    	})
+    </script>
+  </body>
+</html>

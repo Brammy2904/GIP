@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+   <head>
+      <title>1v1 Space Shooter</title>
+      <meta name="viewport" content="width=device-width">
+      <!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+      <link th:href="@{/styles/cssandjs/main.css}" rel="stylesheet" />
+      <link th:href="@{/styles/cssandjs/end.css}" rel="stylesheet" />
+      <script
+         src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+      <script
+         src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+      <script
+         src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+      <script type="text/javascript" th:src="@{/js/cssandjs/script.js}"></script>
+     <script src="https://cdn.jsdelivr.net/npm/party-js@latest/bundle/party.min.js"></script>
+   </head>
+   <body id="body">
+      <div id="HoofdContainer" style="color: white">
+         <button class="buttons" onclick="login()" onmouseover="PlaySound('hover', event)" onmouseout="StopSound('',event)" id="login">Login</button>
+         <div id="menu" style="display:none">
+            <img id="image" src="http://192.168.18.72:8080/images/background2.png">
+            <br>
+            <br>
+            <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound('',event)" id="start">Start
+            Game</button>
+            <br>
+            <button class="buttons" onclick="PlaySound('clickH',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound('',event)"
+               id="highscore">Highscores</button>
+               <br>
+            <button class="buttons" onclick="PlaySound('click',event)" onmouseover="PlaySound('hover', event)" onmouseout="StopSound('',event)"
+               id="settings">Settings</button>
+            <br>
+             
+            <div class="box">
+               <div class="input-wrapper">
+                  <input type="text" id="input" class="form-control"
+                     placeholder="Nickname" maxlength="10"> <label for="input"
+                     class="control-label">Max 10 characters long</label>
+               </div>
+            </div>
+         </div>
+         <div id="setting">
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/ship.png" alt="Blue">
+               <figcaption>Blue</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/ship_Red.png" alt="Red">
+               <figcaption>Red</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/ship_Green.png" alt="Green">
+               <figcaption>Green</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/ship_purple.png" alt="Purple">
+               <figcaption>Purple</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImage(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/ship_Yellow.png" alt="Yellow">
+               <figcaption>Yellow</figcaption>
+            </figure>
+         </div>
+         <div id="setting1">
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/blast_Blue.png"  alt="Blue">
+               <figcaption>Blue</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/blast_Red.png" alt="Red">
+               <figcaption>Red</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/blast_Green.png" alt="Green">
+               <figcaption>Green</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/blast_purple.png" alt="Purple">
+               <figcaption>Purple</figcaption>
+            </figure>
+            <figure onclick="PlaySound('click',event)">
+               <img onclick="chooseImageBullet(event.target)" onmouseover="PlaySound(null, event)" onmouseout="StopSound('',event)" class="images"
+                  src="http://192.168.18.72:8080/images/blast_Yellow.png" alt="Yellow">
+               <figcaption>Yellow</figcaption>
+            </figure>
+         </div>
+         <button class="buttons" onclick="PlaySound('clickB',event)" onmouseover="PlaySound('hoverB', event)" onmouseout="StopSound('back', event)" id="back">Back</button>
+      </div>
+      <div id="container"></div>
+      <p class="loading">Waiting for other player to connect</p>
+      <p id="countdown" >Game starts in 4</p>
+      <div id="board" style="display: none">
+         <h2 id="levens">
+            Levens: <span id="score">10</span>
+         </h2>
+         <!-- 		<h2 id="boost">Boost: Ready</h2> -->
+         <input id="boost" type="range" min="0" value="60" max="60" />
+      </div>
+      <div style="display: none" id="fps">
+         <p id="text">
+      </div>
+      <script>
+
+         var Keys = {
+         	up : false,
+         	left : false,
+         	right : false,
+         	ctrl : false,
+         	shift : false,
+         	space:false
+         }
+         
+         window.onkeydown = function(e) {
+         	var kc = e.keyCode;
+         	if (kc === 16) {
+         		Keys.shift = true;
+         		e.preventDefault();
+         	}
+         	if(kc === 32){
+         		Keys.space = true;
+         	}
+         	if (kc === 17) {
+         		Keys.ctrl = true;
+         	}
+         	if (kc === 39) {
+         		Keys.right = true;
+         	}
+         	if (kc === 38) {
+         		Keys.up = true;
+         	}
+         	if (kc === 37) {
+         		Keys.left = true;
+         	}
+         };
+      </script>
+      <div id="endScreen" style="display: none">
+         <div class="gameover">
+            <p id="zin">GAME OVER</p>
+         </div>
+         <div class="continue">
+            <p>PLAY AGAIN?</p>
+         </div>
+         <div class="keuzes">
+            <div class="yes">
+               <a href="#" onclick="window.location.reload(true)"> YES </a>
+            </div>
+            <div class="no">
+               <a href="http://192.168.18.72:8080/End"> NO </a>
+            </div>
+         </div>
+      </div>
+      <footer id="footer" role="contentinfo" style="bottom: 0;">
+         <div class="wrap">
+            <b>Made by Bram Verbeiren</b>
+         </div>
+      </footer>
+   </body>
+</html>
